@@ -398,3 +398,8 @@ button:not(:disabled), select { cursor: pointer; }
   .topbar-nav button { gap: 4px; padding: 4px 6px; font-size: 12px; }
   .main, .section-block { scroll-margin-top: 108px; }
 }
+
+.driver-identity { display: flex; min-width: 0; align-items: center; gap: 7px; }
+.driver-avatar { display: inline-grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 50%; background-color: #e7eff5; background-repeat: no-repeat; box-shadow: 0 0 0 1px #142b401a; }
+.driver-avatar-fallback { color: #46687e; }
+.data-table .driver-avatar { width: 27px; height: 27px; }

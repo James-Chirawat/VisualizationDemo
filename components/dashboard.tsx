@@ -5,6 +5,7 @@ import { Dialog } from "radix-ui";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { DriverAvatar } from "@/components/driver-avatar";
 import { ChatPanel } from "@/components/chat-panel";
 import { LineAlerts, LineLogo } from "@/components/line-alerts";
 import { FleetMonitor } from "@/components/fleet-monitor";
@@ -140,7 +141,7 @@ export function Dashboard() {
               {byReason.length ? <div className="reason-list">{byReason.map(item => <div key={item.reason}><div className="mb-1 flex items-center justify-between gap-2 text-sm"><span>{item.reason}</span><b>{item.count} เที่ยว</b></div><div className="reason-track"><div style={{ width: `${item.count / summary.late * 100}%` }} /></div></div>)}</div> : <Empty>ไม่มีเที่ยวล่าช้าในตัวกรองนี้</Empty>}
             </Card>
             <Card className="panel"><Heading title="เปรียบเทียบรายคนขับ" subtitle="สูงสุด 5 คน เรียงตามจำนวนเที่ยวล่าช้า" />
-              {drivers.length ? <div className="overflow-x-auto"><table className="data-table compact"><thead><tr><th>รหัสคนขับ</th><th>ส่งถึง</th><th>ล่าช้า</th><th>ตรงเวลา</th></tr></thead><tbody>{drivers.map(driver => <tr key={driver.id}><td><b>{driver.id}</b></td><td>{driver.completed}</td><td>{driver.late}</td><td>{pct(driver.rate)}</td></tr>)}</tbody></table></div> : <Empty>ไม่มีรายการคนขับ</Empty>}
+              {drivers.length ? <div className="overflow-x-auto"><table className="data-table compact"><thead><tr><th>รหัสคนขับ</th><th>ส่งถึง</th><th>ล่าช้า</th><th>ตรงเวลา</th></tr></thead><tbody>{drivers.map(driver => <tr key={driver.id}><td><span className="driver-identity"><DriverAvatar driverId={driver.id} /><b>{driver.id}</b></span></td><td>{driver.completed}</td><td>{driver.late}</td><td>{pct(driver.rate)}</td></tr>)}</tbody></table></div> : <Empty>ไม่มีรายการคนขับ</Empty>}
             </Card>
           </div>
         </section>

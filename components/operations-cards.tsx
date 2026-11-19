@@ -1,6 +1,7 @@
 "use client";
 
 import { Trophy } from "lucide-react";
+import { DriverAvatar } from "@/components/driver-avatar";
 import { Card } from "@/components/ui/card";
 import { num, pct, target, type metrics } from "@/lib/analytics";
 
@@ -13,7 +14,7 @@ export function DriverLeaders({ drivers, onViewDriver }: { drivers: DriverResult
     {drivers.length ? <ol className="leader-list">{drivers.map((driver, index) => <li key={driver.id}>
       <button type="button" onClick={() => onViewDriver(driver.id)} aria-label={`ดูเที่ยวของ ${driver.id}`}>
         <span className="leader-rank">{index + 1}</span>
-        <span className="leader-name"><b>{driver.id}</b><small>ตรงเวลา {pct(driver.rate)}</small></span>
+        <span className="driver-identity"><DriverAvatar driverId={driver.id} /><span className="leader-name"><b>{driver.id}</b><small>ตรงเวลา {pct(driver.rate)}</small></span></span>
         <span className="leader-count"><b>{driver.completed}</b><small>เที่ยว</small></span>
       </button>
     </li>)}</ol> : <p className="leader-empty">ไม่มีเที่ยวที่ส่งถึงในตัวกรองนี้</p>}
