@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState, type ReactNode } from "react";
-import { Activity, ArrowUpRight, BellRing, ChartNoAxesCombined, ChevronDown, CircleHelp, ClipboardList, Clock3, Download, ListFilter, MapPinned, PackageCheck, RotateCcw, Target, Truck, Wallet, X } from "lucide-react";
+import { ArrowUpRight, BellRing, ChartNoAxesCombined, ChevronDown, CircleHelp, ClipboardList, Clock3, Download, ListFilter, MapPinned, PackageCheck, RotateCcw, Target, Truck, Wallet, X } from "lucide-react";
 import { Dialog } from "radix-ui";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Button } from "@/components/ui/button";
@@ -63,15 +63,20 @@ export function Dashboard() {
   ];
 
   return <div className="app-shell">
-    <aside className="side">
-      <a href="#overview" className="brand" onClick={() => setActive("overview")}><span className="brand-mark"><Truck size={22} /></span><span><b>RouteLens</b><small>LOGISTICS INTELLIGENCE</small></span></a>
-      <nav className="side-menu" aria-label="เมนูแดชบอร์ด">{nav.map(item => <button key={item.id} className={active === item.id ? "selected" : ""} onClick={() => go(item.id)}><item.icon size={18} /> {item.label}</button>)}</nav>
-      <div className="side-bottom"><button className="side-help" onClick={() => setMethod(true)}><CircleHelp size={17} /> วิธีอ่านตัวเลข</button></div>
-    </aside>
     <div className="min-w-0">
-      <header className="topbar"><div className="flex min-w-0 items-center gap-2.5"><span className="mobile-brand"><Truck size={18} /></span><span className="hidden items-center gap-2 text-sm text-muted sm:flex"><Activity size={16} /> ศูนย์วิเคราะห์ข้อมูล <span className="text-slate-300">/</span></span><b className="text-sm">ติดตามการขนส่ง</b></div><span className="topbar-label">Logistics Dashboard</span></header>
+      <header className="topbar">
+        <div className="topbar-inner">
+          <a href="#overview" className="topbar-brand" onClick={event => { event.preventDefault(); go("overview"); }}>
+            <span className="brand-mark"><Truck size={19} /></span><b>RouteLens</b>
+          </a>
+          <nav className="topbar-nav" aria-label="เมนูแดชบอร์ด">
+            {nav.map(item => <button key={item.id} type="button" aria-current={active === item.id ? "location" : undefined} onClick={() => go(item.id)}>
+              <item.icon size={15} />{item.label}
+            </button>)}
+          </nav>
+        </div>
+      </header>
       <main id="overview" className="main">
-        <nav className="mobile-menu" aria-label="เมนูบนมือถือ">{nav.map(item => <button key={item.id} aria-current={active === item.id ? "location" : undefined} onClick={() => go(item.id)}><item.icon size={15} />{item.label}</button>)}</nav>
         <div className="intro">
           <div><span className="tag"><span /> ข้อมูลจำลอง · ไตรมาส 1 / 2569</span><h1>ภาพรวมการขนส่ง</h1><p>ติดตามความตรงเวลา ค่าใช้จ่าย และจุดที่ควรตรวจต่อในแต่ละเส้นทาง</p></div>
           <button className="hero-connection" onClick={() => go("alerts")}>
