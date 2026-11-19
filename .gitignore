@@ -5,3 +5,7 @@ out/
 *.tsbuildinfo
 next-env.d.ts
 .DS_Store
+
+# logo-design skill: reference library of 1,400+ third-party SVG logos (~14 MB).
+# Restore it with `npx skills experimental_install` (reads skills-lock.json).
+.claude/skills/logo-design/assets/library/

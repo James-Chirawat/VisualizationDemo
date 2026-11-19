@@ -1,18 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import { BellRing, CheckCircle2, MapPin, Route, Send, ShieldCheck, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { analyze, num, pct, routes, target, type Filters, type Shipment } from "@/lib/analytics";
+import { analyze, formatRange, formatShortDate, num, pct, routeById, target, type Filters, type Shipment } from "@/lib/analytics";
 
 export function LineLogo({ size = 44 }: { size?: number }) {
   return <Image className="line-brand" src="/line-brand.png" width={size} height={size} alt="" unoptimized />;
 }
-
-const dateFormat = new Intl.DateTimeFormat("th-TH", { day: "numeric", month: "short", timeZone: "UTC" });
-const displayDate = (date: string) => dateFormat.format(new Date(date));
 
 function ShipmentTimeline({ shipment }: { shipment: Shipment }) {
   const events = [
@@ -23,7 +20,7 @@ function ShipmentTimeline({ shipment }: { shipment: Shipment }) {
   return <>
     <div className="route-trip-heading"><span>ไทม์ไลน์เที่ยวตัวอย่าง</span><b>{shipment.id}</b></div>
     <ol className="route-timeline">{events.map((event, index) => <li key={event.label}>
-      <time dateTime={event.date ?? undefined}>{event.date ? displayDate(event.date) : "–"}</time>
+      <time dateTime={event.date ?? undefined}>{formatShortDate(event.date)}</time>
       <span className="route-timeline-dot" data-last={index === events.length - 1} aria-hidden />
       <div><b>{event.label}</b><p>{event.detail}</p></div>
     </li>)}</ol>
@@ -32,8 +29,10 @@ function ShipmentTimeline({ shipment }: { shipment: Shipment }) {
 }
 
 export function LineAlerts({ filters, onViewRoute }: { filters: Filters; onViewRoute: (route: string) => void }) {
-  const { worst, rows } = analyze({ ...filters, status: "all" });
-  const route = routes.find(item => item.id === worst?.id);
+  // The alert ignores the status filter, so it only recomputes when the route or date range changes.
+  const { route: routeFilter, from, to } = filters;
+  const { worst, rows } = useMemo(() => analyze({ route: routeFilter, from, to, status: "all" }), [routeFilter, from, to]);
+  const route = worst ? routeById.get(worst.id) : undefined;
   const [origin, destination] = route?.label.split(" – ") ?? [];
   const completedTrips = rows.filter(row => row.route === worst?.id && row.deliveredDate);
   const example = completedTrips.find(row => row.status === "late") ?? completedTrips[0];
@@ -46,7 +45,7 @@ export function LineAlerts({ filters, onViewRoute }: { filters: Filters; onViewR
     <section id="alerts" className="section-block" aria-labelledby="alerts-title">
       <div className="section-heading">
         <div><h2 id="alerts-title">แจ้งเตือนผ่าน LINE OA</h2><p>แจ้งทีมคลังเมื่ออัตราส่งตรงเวลารายเส้นทางต่ำกว่า {target}%</p></div>
-        <span className="connection-pill"><ShieldCheck size={15} /> เชื่อมต่อแล้ว · จำลอง</span>
+        <span className="connection-pill"><ShieldCheck size={16} /> เชื่อมต่อแล้ว · จำลอง</span>
       </div>
       <Card className="alert-grid">
         <div className="panel alert-settings">
@@ -55,7 +54,7 @@ export function LineAlerts({ filters, onViewRoute }: { filters: Filters; onViewR
             <div><dt>เงื่อนไข</dt><dd>อัตราตรงเวลา &lt; {target}%</dd></div>
             <div><dt>ผู้รับ</dt><dd>ทีมควบคุมการขนส่ง</dd></div>
             <div><dt>ขอบเขต</dt><dd>{filters.route === "all" ? "เส้นทางต่ำสุด" : filters.route} · ทุกสถานะ</dd></div>
-            <div><dt>ช่วงวันที่สั่ง</dt><dd>{filters.from} ถึง {filters.to}</dd></div>
+            <div><dt>ช่วงวันที่สั่ง</dt><dd>{formatRange(filters.from, filters.to)}</dd></div>
           </dl>
           {worst && <div className="alert-evaluation">
             <b>{belowTarget ? "เส้นทางที่เข้าเงื่อนไข" : "ผลการตรวจเงื่อนไข"}</b>
@@ -65,17 +64,17 @@ export function LineAlerts({ filters, onViewRoute }: { filters: Filters; onViewR
           <Button className="line-action" disabled={!belowTarget} onClick={() => setLastPreview({ key: previewKey, time: new Intl.DateTimeFormat("th-TH", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" }).format(new Date()) })}>
             <Send size={16} /> จำลองส่งแจ้งเตือน
           </Button>
-          <p className="alert-feedback" role="status">{sent ? <><CheckCircle2 size={15} /> ส่งแจ้งเตือนจำลองแล้ว เวลา {lastPreview.time} น.</> : "การส่งจำลองจะแสดงในตัวอย่างข้อความบนหน้านี้"}</p>
+          <p className="alert-feedback" role="status">{sent ? <><CheckCircle2 size={16} /> ส่งแจ้งเตือนจำลองแล้ว เวลา {lastPreview.time} น.</> : "การส่งจำลองจะแสดงในตัวอย่างข้อความบนหน้านี้"}</p>
         </div>
         <div className="panel alert-preview">
           <div className="alert-preview-heading"><div><h3>ตัวอย่าง Flex Message</h3><p>มุมมองของผู้รับแจ้งเตือน</p></div><span className={sent ? "connection-pill" : "preview-label"}>{sent ? "ส่งแล้ว · จำลอง" : "ตัวอย่าง"}</span></div>
           <div className="message-stage">
             {worst && belowTarget ? <div className="flex-example route-message">
               <div className="route-message-header">
-                <div className="route-message-top"><Route size={17} /><b>{worst.id}</b><span>แจ้งเตือนเส้นทาง</span></div>
+                <div className="route-message-top"><Route size={20} /><b>{worst.id}</b><span>แจ้งเตือนเส้นทาง</span></div>
                 <div className="route-message-stops">
                   <div><span>ต้นทาง</span><strong>{origin}</strong></div>
-                  <div><span>ปลายทาง</span><strong><MapPin size={17} aria-hidden />{destination}</strong></div>
+                  <div><span>ปลายทาง</span><strong><MapPin size={20} aria-hidden />{destination}</strong></div>
                 </div>
               </div>
               <div className="route-message-body">
@@ -83,7 +82,7 @@ export function LineAlerts({ filters, onViewRoute }: { filters: Filters; onViewR
                 {example && <ShipmentTimeline shipment={example} />}
                 <Button className="route-cta" onClick={() => onViewRoute(worst.id)}>ดูข้อมูลเส้นทาง {worst.id}</Button>
               </div>
-            </div> : <div className="alert-empty"><BellRing size={22} /><p>{worst ? `ไม่มีเส้นทางต่ำกว่า ${target}% ในช่วงที่เลือก` : "ยังไม่มีเที่ยวที่ส่งถึงในช่วงที่เลือก"}</p></div>}
+            </div> : <div className="alert-empty"><BellRing size={24} /><p>{worst ? `ไม่มีเส้นทางต่ำกว่า ${target}% ในช่วงที่เลือก` : "ยังไม่มีเที่ยวที่ส่งถึงในช่วงที่เลือก"}</p></div>}
           </div>
         </div>
       </Card>

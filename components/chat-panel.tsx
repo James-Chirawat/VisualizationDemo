@@ -1,10 +1,18 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { ArrowUp, Bot, FileText, LoaderCircle, MessageCircle, Paperclip, RotateCcw, Sparkles, X } from "lucide-react";
+import dynamic from "next/dynamic";
+import { ArrowUp, FileText, LoaderCircle, Paperclip, RotateCcw, Sparkles, X } from "lucide-react";
 import { Dialog } from "radix-ui";
-import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
-import { statusLabels, type Filters } from "@/lib/analytics";
+import { formatRange, statusLabels, type Filters } from "@/lib/analytics";
+import { useMediaQuery } from "@/lib/use-media-query";
+
+// The markdown parser is only needed once an answer arrives, so it loads on demand instead of with the page.
+const Markdown = dynamic(() => import("react-markdown"), { loading: () => <p className="text-muted">…</p> });
+const markdownDisallowed = ["img", "a"];
+
+// On phones the chat fills the screen, so it becomes a modal (page behind is inert and does not scroll).
+const mobileQuery = "(max-width: 590px)";
 
 type Message = { role: "user" | "assistant"; content: string; scope?: string; file?: string };
 type Attachment = { file: File; summary: string };
@@ -35,9 +43,8 @@ function summarizeFile(name: string, text: string) {
 }
 const prompts = ["สรุปผลตามตัวกรอง", "ทำไมส่งล่าช้า และควรตรวจอะไรต่อ?", "คำนวณอัตราส่งตรงเวลาอย่างไร?"];
 
-export function ChatPanel({ filters, open, setOpen }: {
-  filters: Filters; open: boolean; setOpen: (open: boolean) => void;
-}) {
+export function ChatPanel({ filters }: { filters: Filters }) {
+  const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [question, setQuestion] = useState("");
   const [error, setError] = useState("");
@@ -46,6 +53,7 @@ export function ChatPanel({ filters, open, setOpen }: {
   const fileInput = useRef<HTMLInputElement>(null);
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [reading, setReading] = useState(false);
+  const mobile = useMediaQuery(mobileQuery);
 
   async function attach(file: File) {
     setError("");
@@ -91,35 +99,35 @@ export function ChatPanel({ filters, open, setOpen }: {
     } finally { setPending(false); }
   }
 
-  return <Dialog.Root open={open} onOpenChange={setOpen} modal={false}>
-    <Dialog.Trigger asChild><Button className="chat-head" aria-label={open ? "ซ่อน AI Analyst" : "เปิด AI Analyst"} title="AI Analyst">{open ? <X size={25} /> : <MessageCircle size={25} />}{!open && <span>AI Analyst</span>}</Button></Dialog.Trigger>
+  return <Dialog.Root open={open} onOpenChange={setOpen} modal={mobile}>
+    <Dialog.Trigger asChild><Button className="chat-head" aria-label={open ? "ซ่อน AI Analyst" : "เปิด AI Analyst"} title="AI Analyst">{open ? <X size={24} aria-hidden /> : <Sparkles size={24} aria-hidden />}{!open && <span className="chat-head-label">AI Analyst</span>}</Button></Dialog.Trigger>
     <Dialog.Portal>
       <Dialog.Content className="chat-panel chat-window" onInteractOutside={event => event.preventDefault()}>
         <div className="chat-header flex items-center gap-3 px-4 py-3">
           <span className="ai-icon"><Sparkles size={20} /></span>
-          <div className="min-w-0 flex-1"><Dialog.Title className="text-lg font-bold">AI Analyst</Dialog.Title><Dialog.Description className="text-xs text-slate-200">โหมดจำลอง · คำนวณจากตัวกรองปัจจุบัน</Dialog.Description></div>
-          <Button title="ล้างแชต" aria-label="ล้างแชต" disabled={pending || reading || (!messages.length && !question && !attachment)} onClick={() => { setMessages([]); setQuestion(""); setError(""); setAttachment(null); }} className="icon-button"><RotateCcw size={17} /></Button>
+          <div className="min-w-0 flex-1"><Dialog.Title className="text-lg font-bold">AI Analyst</Dialog.Title><Dialog.Description className="text-xs text-[var(--on-dark-muted)]">โหมดจำลอง · คำนวณจากตัวกรองปัจจุบัน</Dialog.Description></div>
+          <Button title="ล้างแชต" aria-label="ล้างแชต" disabled={pending || reading || (!messages.length && !question && !attachment)} onClick={() => { setMessages([]); setQuestion(""); setError(""); setAttachment(null); }} className="icon-button"><RotateCcw size={20} /></Button>
           <Dialog.Close asChild><Button aria-label="ปิด AI Analyst" className="icon-button"><X size={20} /></Button></Dialog.Close>
         </div>
-        <div className="chat-context border-b border-line bg-slate-50 px-4 py-2 text-sm"><b>{scope}</b><p className="mt-0.5 text-muted">{filters.from} ถึง {filters.to}</p></div>
+        <div className="chat-context border-b border-line bg-surface-subtle px-4 py-2 text-sm"><b>{scope}</b><p className="mt-0.5 text-muted">{formatRange(filters.from, filters.to)}</p></div>
         <div ref={list} className="min-h-0 flex-1 overflow-y-auto px-5 py-5" aria-live="polite">
-          {!messages.length && <div className="space-y-3"><div className="rounded-xl bg-[#eef5ff] p-4"><Bot size={20} className="mb-2 text-blue-600" /><p className="font-bold">ถามเกี่ยวกับข้อมูลที่เห็น</p><p className="mt-1 text-sm text-muted">ถามถึงตัวเลข สาเหตุที่บันทึกไว้ หรือสิ่งที่ควรตรวจต่อ คำตอบจะอิงตัวกรอง ณ ตอนส่ง</p></div>{prompts.map(prompt => <Button key={prompt} onClick={() => send(prompt)} className="w-full justify-start border border-line text-left hover:bg-slate-50">{prompt}</Button>)}</div>}
+          {!messages.length && <div className="space-y-3"><div className="rounded-xl bg-[var(--blue-50)] p-4"><Sparkles size={20} className="mb-2 text-[var(--blue-700)]" /><p className="font-bold">ถามเกี่ยวกับข้อมูลที่เห็น</p><p className="mt-1 text-sm text-muted">ถามถึงตัวเลข สาเหตุที่บันทึกไว้ หรือสิ่งที่ควรตรวจต่อ คำตอบจะอิงตัวกรอง ณ ตอนส่ง</p></div>{prompts.map(prompt => <Button key={prompt} onClick={() => send(prompt)} className="w-full justify-start border border-line text-left hover:bg-surface-subtle">{prompt}</Button>)}</div>}
           {messages.map((message, i) => <div key={i} className={`mb-4 ${message.role === "user" ? "ml-8" : "mr-3"}`}>
             <p className="mb-1 text-xs text-muted">{message.role === "user" ? "คุณ" : "คำตอบสาธิต"} · {message.scope}</p>
-            <div className={`rounded-xl px-4 py-3 text-sm ${message.role === "user" ? "bg-[#112b45] text-white" : "markdown border border-line bg-slate-50"}`}>
-              {message.role === "user" ? <>{message.file && <span className="chat-file-label"><FileText size={15} /> {message.file}</span>}{message.content}</> : <ReactMarkdown disallowedElements={["img", "a"]} unwrapDisallowed>{message.content}</ReactMarkdown>}
+            <div className={`rounded-xl px-4 py-3 text-sm ${message.role === "user" ? "bg-[var(--navy-900)] text-white" : "markdown border border-line bg-surface-subtle"}`}>
+              {message.role === "user" ? <>{message.file ? <span className="chat-file-label"><FileText size={16} aria-hidden /> {message.file}</span> : null}{message.content}</> : <Markdown disallowedElements={markdownDisallowed} unwrapDisallowed>{message.content}</Markdown>}
             </div>
           </div>)}
           {pending && <p className="flex items-center gap-2 text-sm text-muted"><LoaderCircle size={16} className="animate-spin" /> กำลังวิเคราะห์ข้อมูล</p>}
         </div>
-        <form className="border-t border-line bg-white p-3" onSubmit={event => { event.preventDefault(); void send(question); }}>
-          {error && <p role="alert" className="mb-2 text-sm text-red-700">{error}</p>}
-          {attachment && <div className="attachment-chip"><FileText size={16} /><span>{attachment.file.name}</span><Button type="button" className="icon-button" disabled={pending} onClick={() => setAttachment(null)} aria-label="นำไฟล์แนบออก"><X size={15} /></Button></div>}
-          <div className="flex items-end gap-1 rounded-xl border border-line p-1.5 focus-within:border-blue-500">
+        <form className="border-t border-line bg-surface p-3" onSubmit={event => { event.preventDefault(); void send(question); }}>
+          {error && <p role="alert" className="mb-2 text-sm text-[var(--warm-700)]">{error}</p>}
+          {attachment && <div className="attachment-chip"><FileText size={16} /><span>{attachment.file.name}</span><Button type="button" className="icon-button" disabled={pending} onClick={() => setAttachment(null)} aria-label="นำไฟล์แนบออก"><X size={16} /></Button></div>}
+          <div className="flex items-end gap-1 chat-composer rounded-xl border p-1.5">
             <input ref={fileInput} type="file" accept=".csv,.tsv,.txt" hidden onChange={event => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ""; if (file) void attach(file); }} />
-            <Button type="button" className="icon-button h-9 w-9" onClick={() => fileInput.current?.click()} disabled={pending || reading} title="แนบ CSV, TSV หรือ TXT" aria-label="แนบไฟล์"><Paperclip size={19} /></Button>
+            <Button type="button" className="icon-button h-9 w-9" onClick={() => fileInput.current?.click()} disabled={pending || reading} title="แนบ CSV, TSV หรือ TXT" aria-label="แนบไฟล์"><Paperclip size={20} /></Button>
             <textarea aria-label="คำถามสำหรับ AI" placeholder="ถามเกี่ยวกับข้อมูลที่เลือก…" rows={2} maxLength={800} value={question} onChange={event => setQuestion(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void send(question); } }} className="min-w-0 flex-1 resize-none p-2 text-sm outline-none" />
-            <Button type="submit" disabled={(!question.trim() && !attachment) || pending || reading} className="primary h-10 w-10 p-0" aria-label="ส่งคำถาม"><ArrowUp size={19} /></Button>
+            <Button type="submit" disabled={(!question.trim() && !attachment) || pending || reading} className="primary h-10 w-10 p-0" aria-label="ส่งคำถาม"><ArrowUp size={20} /></Button>
           </div>
           <p className="mt-2 text-xs text-muted">แนบ CSV, TSV หรือ TXT ได้สูงสุด 2 MB · สรุปไฟล์บนเครื่อง</p>
         </form>

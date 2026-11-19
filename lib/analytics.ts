@@ -11,7 +11,9 @@ export const routes = [
   { id: "R-05", label: "พิษณุโลก – ตาก", done: 26, on: 19, pending: 1, km: 150 },
   { id: "R-06", label: "ขอนแก่น – พิษณุโลก", done: 24, on: 23, pending: 1, km: 320 },
 ] as const;
-export const reasons = ["รอคิวจุดรับสินค้า", "ออกจากคลังช้า", "จราจรติดขัด", "พักรถนอกแผน"] as const;
+export type Route = (typeof routes)[number];
+export const routeById = new Map<string, Route>(routes.map(route => [route.id, route]));
+export const reasons =["รอคิวจุดรับสินค้า", "ออกจากคลังช้า", "จราจรติดขัด", "พักรถนอกแผน"] as const;
 
 export type Filters = { route: string; status: "all" | Status; from: string; to: string };
 export const defaultFilters: Filters = { route: "all", status: "all", ...dateBounds };
@@ -70,6 +72,13 @@ export const nf = new Intl.NumberFormat("en-US");
 export const pct = (n: number | null) => n === null ? "–" : `${n.toFixed(1)}%`;
 export const num = (n: number | null, decimals = 0) => n === null ? "–" : nf.format(Number(n.toFixed(decimals)));
 
+// One Thai date style everywhere on screen (Buddhist year, like the "ไตรมาส 1 / 2569" tag). CSV export keeps ISO dates.
+const fullDate = new Intl.DateTimeFormat("th-TH", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+const shortDate = new Intl.DateTimeFormat("th-TH", { day: "numeric", month: "short", timeZone: "UTC" });
+export const formatDate = (iso: string | null) => iso ? fullDate.format(new Date(iso)) : "–";
+export const formatShortDate = (iso: string | null) => iso ? shortDate.format(new Date(iso)) : "–";
+export const formatRange = (from: string, to: string) => `${formatDate(from)} – ${formatDate(to)}`;
+
 export function filterRows(filters: Filters) {
   return shipments.filter(row =>
     (filters.route === "all" || filters.route === row.route) &&
@@ -102,7 +111,7 @@ export function analyze(filters: Filters) {
   const allDrivers = [...new Set(rows.map(row => row.driver))].map(id => ({
     id, ...metrics(rows.filter(row => row.driver === id)),
   }));
-  const drivers = [...allDrivers].sort((a, b) => b.late - a.late || b.total - a.total).slice(0, 5);
+  const drivers = allDrivers.toSorted((a, b) => b.late - a.late || b.total - a.total).slice(0, 5);
   const leaders = allDrivers.filter(driver => driver.completed > 0)
     .sort((a, b) => b.completed - a.completed || b.onTime - a.onTime || a.id.localeCompare(b.id)).slice(0, 5);
   const months = ["ม.ค.", "ก.พ.", "มี.ค."].map((month, i) => ({
@@ -116,7 +125,7 @@ export function analyze(filters: Filters) {
 export function readFilters(value: unknown): Filters | null {
   if (typeof value !== "object" || !value) return null;
   const { route, status, from, to } = value as Partial<Filters>;
-  if ((route !== "all" && !routes.some(item => item.id === route)) ||
+  if ((route !== "all" && !routeById.has(route ?? "")) ||
       (status !== "all" && !Object.keys(statusLabels).includes(status ?? "")) ||
       typeof from !== "string" || typeof to !== "string" ||
       !validDate(from) || !validDate(to) || from > to) return null;

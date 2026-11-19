@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256"><title>RouteLens</title><style>.lens{fill:#122e48}.stop{fill:#d8692b}@media (prefers-color-scheme:dark){.lens{fill:#ffffff}.stop{fill:#e07434}}</style><g transform="translate(-35.38 -33.23) scale(1.278)">
+  
+  <g transform="translate(2 -4)">
+    <path class="lens" fill-rule="evenodd" d="M128 34a94 94 0 1 0 0 188a94 94 0 1 0 0-188Zm0 34a60 60 0 1 1 0 120a60 60 0 1 1 0-120Z"/>
+    <rect x="-17" y="0" width="34" height="132" rx="17" class="lens" transform="translate(128 128) rotate(45)"/>
+    <circle cx="128" cy="128" r="32" class="stop"/>
+  </g>
+</g></svg>

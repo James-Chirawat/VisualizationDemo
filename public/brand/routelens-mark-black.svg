@@ -1,0 +1,8 @@
+<svg fill="#000000" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><title>RouteLens</title>
+  
+  <g transform="translate(4 -6)">
+    <path fill="#000000" fill-rule="evenodd" d="M128 39a89 89 0 1 0 0 178a89 89 0 1 0 0-178Zm0 26a63 63 0 1 1 0 126a63 63 0 1 1 0-126Z"/>
+    <rect x="-13" y="0" width="26" height="132" rx="13" fill="#000000" transform="translate(128 128) rotate(45)"/>
+    <circle cx="128" cy="128" r="25" fill="#000000"/>
+  </g>
+</svg>

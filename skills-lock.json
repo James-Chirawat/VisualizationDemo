@@ -1,0 +1,40 @@
+{
+  "version": 2,
+  "skills": {
+    "Icons": {
+      "source": "clawic/skills",
+      "commit": "f825206afbf1c697202533a9187be68c7b697e0e",
+      "sourceType": "github",
+      "skillPath": "skills/icons/SKILL.md",
+      "computedHash": "ee9badc0b955f808722351a014ba28ce7a6e918a82681776cc2c02bed347bde9"
+    },
+    "logo-design": {
+      "source": "kaankiziltug/logo-design-skill",
+      "commit": "e9eaddc07895575253d6663320354a708f53e955",
+      "sourceType": "github",
+      "skillPath": "skills/logo-design/SKILL.md",
+      "computedHash": "1e43981509936ee4ba378f9cff590f5e547a6ed3d8b9a65ece6a43473b671ed1"
+    },
+    "map-route": {
+      "source": "artemnovitckii/claude-animation-skills",
+      "commit": "86f70106c9aeae1334184467da5776c533ada3bc",
+      "sourceType": "github",
+      "skillPath": "skills/map-route/SKILL.md",
+      "computedHash": "ecd929932a8b3377d431809d798479924f38086078fdf3e26f0f9549014fbaf6"
+    },
+    "vercel-composition-patterns": {
+      "source": "vercel-labs/agent-skills",
+      "commit": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62",
+      "sourceType": "github",
+      "skillPath": "skills/composition-patterns/SKILL.md",
+      "computedHash": "f711ed8b16162eaa712abbcdbbae6c926f86c57e60127735fecc3ad0dd85b3fa"
+    },
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "commit": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62",
+      "sourceType": "github",
+      "skillPath": "skills/react-best-practices/SKILL.md",
+      "computedHash": "7991ed4fbecdac23f47c1a40c243e00a212a9e7f3604db93959b3ae11dffe299"
+    }
+  }
+}
