@@ -64,10 +64,10 @@ export function Dashboard() {
     <aside className="side">
       <a href="#overview" className="brand" onClick={() => setActive("overview")}><span className="brand-mark"><Truck size={22} /></span><span><b>RouteLens</b><small>LOGISTICS INTELLIGENCE</small></span></a>
       <nav className="side-menu" aria-label="เมนูแดชบอร์ด">{nav.map(item => <button key={item.id} className={active === item.id ? "selected" : ""} onClick={() => go(item.id)}><item.icon size={18} /> {item.label}</button>)}</nav>
-      <div className="side-bottom"><button className="side-help" onClick={() => setMethod(true)}><CircleHelp size={17} /> วิธีอ่านตัวเลข</button><div className="side-foot"><span>DATA VISUALIZATION</span><p>สาธิตการสอบสอน</p></div></div>
+      <div className="side-bottom"><button className="side-help" onClick={() => setMethod(true)}><CircleHelp size={17} /> วิธีอ่านตัวเลข</button></div>
     </aside>
     <div className="min-w-0">
-      <header className="topbar"><div className="flex min-w-0 items-center gap-2.5"><span className="mobile-brand"><Truck size={18} /></span><span className="hidden items-center gap-2 text-sm text-muted sm:flex"><Activity size={16} /> ศูนย์วิเคราะห์ข้อมูล <span className="text-slate-300">/</span></span><b className="text-sm">ติดตามการขนส่ง</b></div><Button className="ai-button" onClick={() => setChatOpen(true)}><Sparkles size={16} /> AI Analyst</Button></header>
+      <header className="topbar"><div className="flex min-w-0 items-center gap-2.5"><span className="mobile-brand"><Truck size={18} /></span><span className="hidden items-center gap-2 text-sm text-muted sm:flex"><Activity size={16} /> ศูนย์วิเคราะห์ข้อมูล <span className="text-slate-300">/</span></span><b className="text-sm">ติดตามการขนส่ง</b></div><span className="topbar-label">Logistics Dashboard</span></header>
       <main id="overview" className="main">
         <nav className="mobile-menu" aria-label="เมนูบนมือถือ">{nav.map(item => <button key={item.id} aria-current={active === item.id ? "location" : undefined} onClick={() => go(item.id)}><item.icon size={15} />{item.label}</button>)}</nav>
         <div className="intro">
@@ -134,7 +134,7 @@ export function Dashboard() {
           </tbody></table></div><div className="mt-4 flex items-center justify-between gap-2 text-sm"><span className="text-muted">หน้า {page + 1} จาก {pageCount}</span><div className="flex gap-2"><Button className="secondary" disabled={page === 0} onClick={() => setCurrentPage(page - 1)}>ก่อนหน้า</Button><Button className="secondary" disabled={page + 1 === pageCount} onClick={() => setCurrentPage(page + 1)}>ถัดไป</Button></div></div></> : <Empty>ไม่พบรายการ ลองปรับตัวกรองหรือคำค้น</Empty>}
         </Card>
         <LineAlerts filters={filters} onViewRoute={route => { setFilters(current => ({ ...current, route, status: "all" })); setCurrentPage(0); go("analysis"); }} />
-        <footer className="footer"><span>RouteLens · ชุดข้อมูลจำลองเพื่อการสอน</span><button className="text-link" onClick={() => setMethod(true)}>ดูนิยาม KPI</button></footer>
+        <footer className="footer"><span>RouteLens · ชุดข้อมูลจำลอง</span><button className="text-link" onClick={() => setMethod(true)}>ดูนิยาม KPI</button></footer>
       </main>
     </div>
     <ChatPanel filters={filters} open={chatOpen} setOpen={setChatOpen} />

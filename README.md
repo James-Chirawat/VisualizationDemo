@@ -1,6 +1,6 @@
 # RouteLens — Visualization Demo
 
-เว็บสาธิตสอบสอน Data Visualization สำหรับติดตามการขนส่ง ใช้ Next.js App Router, TypeScript, Tailwind CSS, คอมโพเนนต์แบบ shadcn/ui (Radix), Recharts และ Lucide React
+แดชบอร์ดติดตามการขนส่งและวิเคราะห์ KPI ใช้ Next.js App Router, TypeScript, Tailwind CSS, คอมโพเนนต์แบบ shadcn/ui (Radix), Recharts และ Lucide React
 
 ## เริ่มใช้งาน
 
@@ -16,9 +16,9 @@ npm run dev
 
 ## แชตและ LINE OA ในโหมดสาธิต
 
-AI Analyst คำนวณคำตอบจากข้อมูลจำลองและตัวกรองในหน้าเว็บผ่าน `/api/chat` โดยไม่ต้องตั้ง environment variable หรือ API key
+AI Analyst คำนวณคำตอบจากข้อมูลจำลองและตัวกรองในหน้าเว็บผ่าน `/api/chat` โดยไม่ต้องตั้ง environment variable หรือ API key ปุ่มแนบไฟล์รองรับ CSV, TSV และ TXT สูงสุด 2 MB และสรุปโครงสร้างไฟล์ในเบราว์เซอร์
 
-หน้า LINE OA แสดงสถานะเชื่อมต่อจำลองและตัวอย่าง Flex Message จากเส้นทางที่อัตราตรงเวลาต่ำกว่า 80% กฎใช้ช่วงวันที่และเส้นทางที่เลือก และนับทุกสถานะเพื่อคงฐานคำนวณ ปุ่มจำลองส่งเปลี่ยนสถานะบนหน้าเว็บเท่านั้น โลโก้จาก [LINE Brand Icon](https://www.line.me/en/logo)
+หน้า LINE OA แสดงสถานะเชื่อมต่อจำลองและตัวอย่าง Flex Message แบบต้นทาง–ปลายทางและไทม์ไลน์เที่ยวขนส่ง จากเส้นทางที่อัตราตรงเวลาต่ำกว่า 80% กฎใช้ช่วงวันที่และเส้นทางที่เลือก และนับทุกสถานะเพื่อคงฐานคำนวณ ปุ่มจำลองส่งเปลี่ยนสถานะบนหน้าเว็บเท่านั้น โลโก้จาก [LINE Brand Icon](https://www.line.me/en/logo)
 
 ## ลำดับสาธิต
 

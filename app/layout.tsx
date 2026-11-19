@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "RouteLens · Logistics Intelligence",
-  description: "แดชบอร์ดสาธิตวิเคราะห์การขนส่งสำหรับการสอบสอน Data Visualization",
+  description: "แดชบอร์ดติดตามและวิเคราะห์ผลการขนส่ง",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
