@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ChatPanel } from "@/components/chat-panel";
 import { LineAlerts, LineLogo } from "@/components/line-alerts";
+import { FleetMonitor } from "@/components/fleet-monitor";
+import { DriverLeaders, OperationsMix } from "@/components/operations-cards";
 import { analyze, dateBounds, defaultFilters, num, pct, routes, statusLabels, target, type Filters, type Shipment } from "@/lib/analytics";
 
 const nav = [{ label: "ภาพรวม", id: "overview", icon: ChartNoAxesCombined }, { label: "เจาะลึกข้อมูล", id: "analysis", icon: MapPinned }, { label: "รายการขนส่ง", id: "shipments", icon: ClipboardList }, { label: "LINE OA", id: "alerts", icon: BellRing }];
@@ -41,7 +43,7 @@ export function Dashboard() {
   const [detail, setDetail] = useState<Shipment | null>(null);
   const [method, setMethod] = useState(false);
   const insight = useMemo(() => analyze(filters), [filters]);
-  const { summary, byRoute, byReason, drivers, months, worst, comparison } = insight;
+  const { summary, byRoute, byReason, drivers, leaders, months, worst, comparison } = insight;
   const visibleRows = useMemo(() => insight.rows.filter(row => {
     const term = search.trim().toLowerCase();
     return !term || [row.id, row.route, row.driver, routes.find(route => route.id === row.route)?.label].some(value => value?.toLowerCase().includes(term));
@@ -84,10 +86,21 @@ export function Dashboard() {
           <label className="field"><span>วันที่สั่งสิ้นสุด</span><input type="date" min={filters.from} max={dateBounds.to} value={filters.to} onChange={event => { if (event.target.value >= filters.from && event.target.value <= dateBounds.to) change("to", event.target.value); }} /></label>
           <Button className="secondary reset" onClick={() => { setFilters(defaultFilters); setCurrentPage(0); setSearch(""); setSort("latest"); }}><RotateCcw size={15} /> รีเซ็ต</Button>
         </Card>
+        <div className="executive-grid">
+          <div className="executive-main">
         <div className="overview-heading"><h2>ตัวชี้วัดการขนส่ง</h2><button className="text-link" onClick={() => setMethod(true)}><CircleHelp size={15} /> นิยาม KPI</button></div>
         <div className="kpi-grid">{kpis.map(kpi => <Card key={kpi.name} className={`kpi ${kpi.warm ? "kpi-feature" : ""}`}><div className="flex items-center justify-between gap-2"><h2>{kpi.name}</h2><span className={`kpi-icon ${kpi.warm ? "warm" : ""}`}><kpi.icon size={17} /></span></div><div className="kpi-value">{kpi.value}<small>{kpi.name === "ค่าใช้จ่ายรวม" ? " บาท" : kpi.name === "เวลาขนส่งเฉลี่ย" && summary.transit !== null ? " วัน" : ""}</small></div><p>{kpi.detail}</p></Card>)}</div>
         {filters.status !== "all" && <p className="scope-note">กำลังดูเฉพาะสถานะ «{statusLabels[filters.status]}» อัตราตรงเวลาใช้เฉพาะเที่ยวที่เหลือในตัวกรองนี้</p>}
-        <div className="chart-grid">
+        <div className="executive-trend">
+          <Card className="panel"><Heading title="แนวโน้มรายเดือน" subtitle="คิดตามเดือนที่สั่งและเที่ยวที่ส่งถึงแล้ว" />
+            {summary.completed ? <div className="chart chart-trend" aria-label="แนวโน้มอัตราส่งตรงเวลารายเดือน"><ResponsiveContainer width="100%" height="100%"><AreaChart data={months} margin={{ left: -9, right: 12, top: 12, bottom: 3 }}>
+              <defs><linearGradient id="trend-fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#479bd0" stopOpacity=".30" /><stop offset="100%" stopColor="#479bd0" stopOpacity=".02" /></linearGradient></defs>
+              <CartesianGrid vertical={false} stroke="#e8eef2" /><XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 13, fill: "#52647a" }} /><YAxis domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tickFormatter={v => `${v}%`} axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#52647a" }} /><Tooltip contentStyle={chartTooltip} formatter={value => [pct(Number(value)), "อัตราตรงเวลา"]} /><ReferenceLine y={target} stroke="#b26627" strokeDasharray="4 4" /><Area type="linear" dataKey="rate" stroke="#2377a7" strokeWidth={3} fill="url(#trend-fill)" dot={{ r: 4, fill: "#2377a7" }} isAnimationActive={false} />
+            </AreaChart></ResponsiveContainer></div> : <Empty>ไม่มีข้อมูลสำหรับแสดงแนวโน้ม</Empty>}
+          </Card>
+        </div>
+        <div className="executive-details">
+          <DriverLeaders drivers={leaders} onViewDriver={driver => { setSearch(driver); setCurrentPage(0); go("shipments"); }} />
           <Card className="panel"><Heading title="อัตราตรงเวลารายเส้นทาง" subtitle="คลิกแท่งกราฟหรือปุ่มเส้นทางเพื่อกรอง" aside={<span className="legend"><i /> เป้าหมาย 80%</span>} />
             {summary.completed ? <><div className="chart chart-routes" aria-label="กราฟเปรียบเทียบอัตราตรงเวลารายเส้นทาง"><ResponsiveContainer width="100%" height="100%">
               <BarChart layout="vertical" data={byRoute} margin={{ top: 6, right: 12, left: 4, bottom: 0 }} barSize={19}>
@@ -99,12 +112,12 @@ export function Dashboard() {
               </BarChart>
             </ResponsiveContainer></div><div className="route-buttons">{byRoute.map(route => <Button key={route.id} className={`route-chip ${filters.route === route.id ? "route-selected" : ""}`} onClick={() => change("route", filters.route === route.id ? "all" : route.id)} aria-pressed={filters.route === route.id}>{route.id} <b>{pct(route.rate)}</b></Button>)}</div></> : <Empty>ไม่มีเที่ยวที่ส่งถึงในตัวกรองนี้</Empty>}
           </Card>
-          <Card className="panel"><Heading title="แนวโน้มรายเดือน" subtitle="คิดตามเดือนที่สั่งและเที่ยวที่ส่งถึงแล้ว" />
-            {summary.completed ? <div className="chart chart-trend" aria-label="แนวโน้มอัตราส่งตรงเวลารายเดือน"><ResponsiveContainer width="100%" height="100%"><AreaChart data={months} margin={{ left: -9, right: 12, top: 12, bottom: 3 }}>
-              <defs><linearGradient id="trend-fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#479bd0" stopOpacity=".30" /><stop offset="100%" stopColor="#479bd0" stopOpacity=".02" /></linearGradient></defs>
-              <CartesianGrid vertical={false} stroke="#e8eef2" /><XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 13, fill: "#52647a" }} /><YAxis domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tickFormatter={v => `${v}%`} axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#52647a" }} /><Tooltip contentStyle={chartTooltip} formatter={value => [pct(Number(value)), "อัตราตรงเวลา"]} /><ReferenceLine y={target} stroke="#b26627" strokeDasharray="4 4" /><Area type="linear" dataKey="rate" stroke="#2377a7" strokeWidth={3} fill="url(#trend-fill)" dot={{ r: 4, fill: "#2377a7" }} isAnimationActive={false} />
-            </AreaChart></ResponsiveContainer></div> : <Empty>ไม่มีข้อมูลสำหรับแสดงแนวโน้ม</Empty>}
-          </Card>
+        </div>
+          </div>
+          <aside className="executive-rail" aria-label="ภาพรวมปฏิบัติการ">
+            <FleetMonitor rows={insight.rows} onViewTrip={setDetail} />
+            <OperationsMix summary={summary} belowTarget={byRoute.filter(route => route.rate !== null && route.rate < target).length} measuredRoutes={byRoute.filter(route => route.rate !== null).length} />
+          </aside>
         </div>
         <section id="analysis" className="section-block">
           <Heading title="เจาะลึกผลการขนส่ง" subtitle={scope} aside={<Button className="ai-button" onClick={() => setChatOpen(true)}><Sparkles size={16} /> ถาม AI เกี่ยวกับข้อมูลนี้</Button>} />

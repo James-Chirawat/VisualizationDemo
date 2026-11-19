@@ -99,15 +99,18 @@ export function analyze(filters: Filters) {
     .map(route => ({ id: route.id, label: route.label, ...metrics(rows.filter(row => row.route === route.id)) }));
   const byReason = reasons.map(reason => ({ reason, count: rows.filter(row => row.reason === reason).length }))
     .filter(item => item.count).sort((a, b) => b.count - a.count);
-  const drivers = [...new Set(rows.map(row => row.driver))].map(id => ({
+  const allDrivers = [...new Set(rows.map(row => row.driver))].map(id => ({
     id, ...metrics(rows.filter(row => row.driver === id)),
-  })).sort((a, b) => b.late - a.late || b.total - a.total).slice(0, 5);
+  }));
+  const drivers = [...allDrivers].sort((a, b) => b.late - a.late || b.total - a.total).slice(0, 5);
+  const leaders = allDrivers.filter(driver => driver.completed > 0)
+    .sort((a, b) => b.completed - a.completed || b.onTime - a.onTime || a.id.localeCompare(b.id)).slice(0, 5);
   const months = ["ม.ค.", "ก.พ.", "มี.ค."].map((month, i) => ({
     month, ...metrics(rows.filter(row => row.orderDate.startsWith(`2026-0${i + 1}`))),
   }));
   const worst = byRoute.filter(route => route.rate !== null).sort((a, b) => a.rate! - b.rate!)[0] ?? null;
   const comparison = filters.route === "all" ? null : metrics(filterRows({ ...filters, route: "all" }).filter(row => row.route !== filters.route));
-  return { rows, summary, byRoute, byReason, drivers, months, worst, comparison };
+  return { rows, summary, byRoute, byReason, drivers, leaders, months, worst, comparison };
 }
 
 export function readFilters(value: unknown): Filters | null {
