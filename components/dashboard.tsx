@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState, type ReactNode } from "react";
-import { Activity, ArrowUpRight, BellRing, ChartNoAxesCombined, ChevronDown, CircleHelp, ClipboardList, Clock3, Download, ListFilter, MapPinned, PackageCheck, RotateCcw, Sparkles, Target, Truck, Wallet, X } from "lucide-react";
+import { Activity, ArrowUpRight, BellRing, ChartNoAxesCombined, ChevronDown, CircleHelp, ClipboardList, Clock3, Download, ListFilter, MapPinned, PackageCheck, RotateCcw, Target, Truck, Wallet, X } from "lucide-react";
 import { Dialog } from "radix-ui";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Button } from "@/components/ui/button";
@@ -86,11 +86,11 @@ export function Dashboard() {
           <label className="field"><span>วันที่สั่งสิ้นสุด</span><input type="date" min={filters.from} max={dateBounds.to} value={filters.to} onChange={event => { if (event.target.value >= filters.from && event.target.value <= dateBounds.to) change("to", event.target.value); }} /></label>
           <Button className="secondary reset" onClick={() => { setFilters(defaultFilters); setCurrentPage(0); setSearch(""); setSort("latest"); }}><RotateCcw size={15} /> รีเซ็ต</Button>
         </Card>
-        <div className="executive-grid">
-          <div className="executive-main">
         <div className="overview-heading"><h2>ตัวชี้วัดการขนส่ง</h2><button className="text-link" onClick={() => setMethod(true)}><CircleHelp size={15} /> นิยาม KPI</button></div>
         <div className="kpi-grid">{kpis.map(kpi => <Card key={kpi.name} className={`kpi ${kpi.warm ? "kpi-feature" : ""}`}><div className="flex items-center justify-between gap-2"><h2>{kpi.name}</h2><span className={`kpi-icon ${kpi.warm ? "warm" : ""}`}><kpi.icon size={17} /></span></div><div className="kpi-value">{kpi.value}<small>{kpi.name === "ค่าใช้จ่ายรวม" ? " บาท" : kpi.name === "เวลาขนส่งเฉลี่ย" && summary.transit !== null ? " วัน" : ""}</small></div><p>{kpi.detail}</p></Card>)}</div>
         {filters.status !== "all" && <p className="scope-note">กำลังดูเฉพาะสถานะ «{statusLabels[filters.status]}» อัตราตรงเวลาใช้เฉพาะเที่ยวที่เหลือในตัวกรองนี้</p>}
+        <div className="executive-grid">
+          <div className="executive-main">
         <div className="executive-trend">
           <Card className="panel"><Heading title="แนวโน้มรายเดือน" subtitle="คิดตามเดือนที่สั่งและเที่ยวที่ส่งถึงแล้ว" />
             {summary.completed ? <div className="chart chart-trend" aria-label="แนวโน้มอัตราส่งตรงเวลารายเดือน"><ResponsiveContainer width="100%" height="100%"><AreaChart data={months} margin={{ left: -9, right: 12, top: 12, bottom: 3 }}>
@@ -101,7 +101,7 @@ export function Dashboard() {
         </div>
         <div className="executive-details">
           <DriverLeaders drivers={leaders} onViewDriver={driver => { setSearch(driver); setCurrentPage(0); go("shipments"); }} />
-          <Card className="panel"><Heading title="อัตราตรงเวลารายเส้นทาง" subtitle="คลิกแท่งกราฟหรือปุ่มเส้นทางเพื่อกรอง" aside={<span className="legend"><i /> เป้าหมาย 80%</span>} />
+          <Card className="panel route-performance"><Heading title="อัตราตรงเวลารายเส้นทาง" subtitle="คลิกแท่งกราฟหรือปุ่มเส้นทางเพื่อกรอง" aside={<span className="legend"><i /> เป้าหมาย 80%</span>} />
             {summary.completed ? <><div className="chart chart-routes" aria-label="กราฟเปรียบเทียบอัตราตรงเวลารายเส้นทาง"><ResponsiveContainer width="100%" height="100%">
               <BarChart layout="vertical" data={byRoute} margin={{ top: 6, right: 12, left: 4, bottom: 0 }} barSize={19}>
                 <CartesianGrid horizontal={false} stroke="#e8eef2" /><XAxis type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tickFormatter={value => `${value}%`} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#52647a" }} />
@@ -120,7 +120,7 @@ export function Dashboard() {
           </aside>
         </div>
         <section id="analysis" className="section-block">
-          <Heading title="เจาะลึกผลการขนส่ง" subtitle={scope} aside={<Button className="ai-button" onClick={() => setChatOpen(true)}><Sparkles size={16} /> ถาม AI เกี่ยวกับข้อมูลนี้</Button>} />
+          <Heading title="เจาะลึกผลการขนส่ง" subtitle={scope} />
           <div className="analysis-grid">
             <Card className="panel"><Heading title="สิ่งที่ข้อมูลบอก" subtitle="เทียบผลกับเป้าหมาย และดูฐานคำนวณ" />
               {summary.total ? <div className="finding"><span className="kpi-icon warm"><Target size={18} /></span><div>
@@ -141,7 +141,7 @@ export function Dashboard() {
         </section>
         <Card id="shipments" className="panel section-block">
           <Heading title="รายการขนส่ง" subtitle={`พบ ${visibleRows.length} จาก ${summary.total} เที่ยวในตัวกรอง · กดรหัสรายการเพื่อเปิดรายละเอียด`} aside={<Button className="secondary" onClick={() => downloadCsv(insight.rows)} disabled={!summary.total}><Download size={16} /> ส่งออก CSV</Button>} />
-          <div className="mb-3 flex flex-wrap items-center gap-2"><input className="table-input" type="search" placeholder="ค้นหารหัสเที่ยว เส้นทาง หรือคนขับ" aria-label="ค้นหารายการขนส่ง" value={search} onChange={event => { setSearch(event.target.value); setCurrentPage(0); }} /><span className="select"><select aria-label="เรียงรายการ" value={sort} onChange={event => { setSort(event.target.value as typeof sort); setCurrentPage(0); }}><option value="latest">วันที่สั่งล่าสุด</option><option value="delay">ล่าช้ามากที่สุด</option><option value="cost">ค่าใช้จ่ายสูงสุด</option></select><ChevronDown size={15} /></span></div>
+          <div className="shipment-controls"><input className="table-input" type="search" placeholder="ค้นหารหัสเที่ยว เส้นทาง หรือคนขับ" aria-label="ค้นหารายการขนส่ง" value={search} onChange={event => { setSearch(event.target.value); setCurrentPage(0); }} /><span className="select"><select aria-label="เรียงรายการ" value={sort} onChange={event => { setSort(event.target.value as typeof sort); setCurrentPage(0); }}><option value="latest">วันที่สั่งล่าสุด</option><option value="delay">ล่าช้ามากที่สุด</option><option value="cost">ค่าใช้จ่ายสูงสุด</option></select><ChevronDown size={15} /></span></div>
           {visibleRows.length ? <><div className="overflow-x-auto"><table className="data-table"><thead><tr><th>รหัสเที่ยว</th><th>เส้นทาง</th><th>คนขับ</th><th>วันที่สั่ง</th><th>ส่งถึง</th><th>สถานะ</th><th className="text-right">ค่าใช้จ่าย (บาท)</th></tr></thead><tbody>
             {visibleRows.slice(page * pageSize, (page + 1) * pageSize).map(row => <tr key={row.id}><td><button className="text-link" onClick={() => setDetail(row)}>{row.id}</button></td><td>{row.route}</td><td>{row.driver}</td><td>{row.orderDate}</td><td>{row.deliveredDate ?? "–"}</td><td><StatusBadge row={row} /></td><td className="text-right tabular-nums">{num(row.cost)}</td></tr>)}
           </tbody></table></div><div className="mt-4 flex items-center justify-between gap-2 text-sm"><span className="text-muted">หน้า {page + 1} จาก {pageCount}</span><div className="flex gap-2"><Button className="secondary" disabled={page === 0} onClick={() => setCurrentPage(page - 1)}>ก่อนหน้า</Button><Button className="secondary" disabled={page + 1 === pageCount} onClick={() => setCurrentPage(page + 1)}>ถัดไป</Button></div></div></> : <Empty>ไม่พบรายการ ลองปรับตัวกรองหรือคำค้น</Empty>}

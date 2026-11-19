@@ -48,8 +48,8 @@ export function LineAlerts({ filters, onViewRoute }: { filters: Filters; onViewR
         <div><h2 id="alerts-title">แจ้งเตือนผ่าน LINE OA</h2><p>แจ้งทีมคลังเมื่ออัตราส่งตรงเวลารายเส้นทางต่ำกว่า {target}%</p></div>
         <span className="connection-pill"><ShieldCheck size={15} /> เชื่อมต่อแล้ว · จำลอง</span>
       </div>
-      <div className="alert-grid">
-        <Card className="panel alert-settings">
+      <Card className="alert-grid">
+        <div className="panel alert-settings">
           <div className="flex items-center gap-3"><LineLogo /><div><h3>RouteLens Logistics</h3><p>LINE Official Account · บัญชีสาธิต</p></div></div>
           <dl className="alert-rules">
             <div><dt>เงื่อนไข</dt><dd>อัตราตรงเวลา &lt; {target}%</dd></div>
@@ -57,12 +57,17 @@ export function LineAlerts({ filters, onViewRoute }: { filters: Filters; onViewR
             <div><dt>ขอบเขต</dt><dd>{filters.route === "all" ? "เส้นทางต่ำสุด" : filters.route} · ทุกสถานะ</dd></div>
             <div><dt>ช่วงวันที่สั่ง</dt><dd>{filters.from} ถึง {filters.to}</dd></div>
           </dl>
+          {worst && <div className="alert-evaluation">
+            <b>{belowTarget ? "เส้นทางที่เข้าเงื่อนไข" : "ผลการตรวจเงื่อนไข"}</b>
+            <p>{worst.id} · {worst.label}</p>
+            <p>ส่งตรงเวลา <strong>{pct(worst.rate)}</strong> จาก {worst.completed} เที่ยวที่ส่งถึง</p>
+          </div>}
           <Button className="line-action" disabled={!belowTarget} onClick={() => setLastPreview({ key: previewKey, time: new Intl.DateTimeFormat("th-TH", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Bangkok" }).format(new Date()) })}>
             <Send size={16} /> จำลองส่งแจ้งเตือน
           </Button>
           <p className="alert-feedback" role="status">{sent ? <><CheckCircle2 size={15} /> ส่งแจ้งเตือนจำลองแล้ว เวลา {lastPreview.time} น.</> : "การส่งจำลองจะแสดงในตัวอย่างข้อความบนหน้านี้"}</p>
-        </Card>
-        <Card className="panel alert-preview">
+        </div>
+        <div className="panel alert-preview">
           <div className="alert-preview-heading"><div><h3>ตัวอย่าง Flex Message</h3><p>มุมมองของผู้รับแจ้งเตือน</p></div><span className={sent ? "connection-pill" : "preview-label"}>{sent ? "ส่งแล้ว · จำลอง" : "ตัวอย่าง"}</span></div>
           <div className="message-stage">
             {worst && belowTarget ? <div className="flex-example route-message">
@@ -80,8 +85,8 @@ export function LineAlerts({ filters, onViewRoute }: { filters: Filters; onViewR
               </div>
             </div> : <div className="alert-empty"><BellRing size={22} /><p>{worst ? `ไม่มีเส้นทางต่ำกว่า ${target}% ในช่วงที่เลือก` : "ยังไม่มีเที่ยวที่ส่งถึงในช่วงที่เลือก"}</p></div>}
           </div>
-        </Card>
-      </div>
+        </div>
+      </Card>
     </section>
   );
 }
