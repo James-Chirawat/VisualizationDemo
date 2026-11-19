@@ -349,3 +349,8 @@ button:not(:disabled), select { cursor: pointer; }
 @media(max-width: 490px) {
   .executive-rail { grid-template-columns: minmax(0,1fr); }
 }
+
+.fleet-map svg[role=img] { height: clamp(262px, 24vw, 330px); }
+.fleet-city { fill: #e8f4fc; stroke: #173344; stroke-width: 2.6px; paint-order: stroke fill; stroke-linejoin: round; font-size: 9px; font-weight: 600; }
+.fleet-caption { color: #a8c5d6; font-size: 11px; margin: 7px 3px 0; }
+.fleet-list button.fleet-route-highlighted { background: #244a61; }
