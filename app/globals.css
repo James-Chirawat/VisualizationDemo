@@ -302,7 +302,9 @@ button:not(:disabled), select { cursor: pointer; }
 .fleet-list button + button { border-top: 1px solid #ffffff16; }
 .fleet-list button:hover { background: #244a61; }
 .fleet-list button > span:first-child { width: 7px; height: 7px; border-radius: 50%; }
-.fleet-list button > span:nth-child(2) { min-width: 0; display: flex; gap: 4px; align-items: baseline; }
+.fleet-route-label { min-width: 0; display: grid; line-height: 1.4; }
+.fleet-driver { display: flex; align-items: center; gap: 5px; }
+.fleet-driver .driver-avatar { width: 24px; height: 24px; box-shadow: 0 0 0 1px #c2e0f75c; }
 .fleet-list b { flex: none; font-size: 12px; }
 .fleet-list small { color: #b4cddd; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .status-ring { width: 94px; aspect-ratio: 1; display: grid; place-items: center; border-radius: 50%; margin: 10px auto; }

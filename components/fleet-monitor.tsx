@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Navigation, Pause, Play, Truck } from "lucide-react";
+import { DriverAvatar } from "@/components/driver-avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { routes, type Shipment } from "@/lib/analytics";
@@ -112,8 +113,8 @@ export function FleetMonitor({ rows, onViewTrip }: { rows: Shipment[]; onViewTri
         onFocus={() => setFocusedRoute(route.id)} onBlur={() => setFocusedRoute(null)}
         onClick={() => onViewTrip(trip)} aria-label={`เปิดเที่ยว ${route.id} ${route.label} คนขับ ${trip.driver}`}>
         <span style={{ backgroundColor: corridor.color }} />
-        <span><b>{trip.route}</b><small>{route.label}</small></span>
-        <small>{trip.driver}</small>
+        <span className="fleet-route-label"><b>{trip.route}</b><small>{route.label}</small></span>
+        <span className="fleet-driver"><DriverAvatar driverId={trip.driver} /><small>{trip.driver}</small></span>
       </button>)}
     </div>
   </Card>;
