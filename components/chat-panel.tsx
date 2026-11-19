@@ -6,11 +6,11 @@ import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { statusLabels, type Filters } from "@/lib/analytics";
 
-type Message = { role: "user" | "assistant"; content: string; mode?: "qwen" | "demo"; scope?: string };
+type Message = { role: "user" | "assistant"; content: string; scope?: string };
 const prompts = ["สรุปผลตามตัวกรอง", "ทำไมส่งล่าช้า และควรตรวจอะไรต่อ?", "คำนวณอัตราส่งตรงเวลาอย่างไร?"];
 
-export function ChatPanel({ filters, qwenReady, open, setOpen }: {
-  filters: Filters; qwenReady: boolean; open: boolean; setOpen: (open: boolean) => void;
+export function ChatPanel({ filters, open, setOpen }: {
+  filters: Filters; open: boolean; setOpen: (open: boolean) => void;
 }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [question, setQuestion] = useState("");
@@ -29,11 +29,11 @@ export function ChatPanel({ filters, qwenReady, open, setOpen }: {
     try {
       const response = await fetch("/api/chat", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filters, messages: next.slice(-5).map(({ role, content }) => ({ role, content: content.slice(0, 2200) })) }),
+        body: JSON.stringify({ filters, question: content }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "ส่งข้อความไม่สำเร็จ");
-      setMessages([...next, { role: "assistant", content: data.answer, mode: data.mode, scope }]);
+      setMessages([...next, { role: "assistant", content: data.answer, scope }]);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "ส่งข้อความไม่สำเร็จ");
       setMessages(messages); setQuestion(content);
@@ -46,7 +46,7 @@ export function ChatPanel({ filters, qwenReady, open, setOpen }: {
       <Dialog.Content className="chat-panel fixed inset-y-0 right-0 z-50 flex w-full max-w-[480px] flex-col bg-white shadow-2xl">
         <div className="flex items-center gap-3 border-b border-line px-5 py-5">
           <span className="ai-icon"><Sparkles size={20} /></span>
-          <div className="min-w-0 flex-1"><Dialog.Title className="text-lg font-bold">AI Analyst</Dialog.Title><Dialog.Description className="text-[13px] text-muted">{qwenReady ? "Qwen · ใช้ข้อมูลตามตัวกรองปัจจุบัน" : "โหมดสาธิต · ตอบจากข้อมูลด้วยกฎคำนวณ"}</Dialog.Description></div>
+          <div className="min-w-0 flex-1"><Dialog.Title className="text-lg font-bold">AI Analyst</Dialog.Title><Dialog.Description className="text-[13px] text-muted">โหมดจำลอง · คำนวณจากตัวกรองปัจจุบัน</Dialog.Description></div>
           <Button title="ล้างแชต" aria-label="ล้างแชต" disabled={pending || (!messages.length && !question)} onClick={() => { setMessages([]); setQuestion(""); setError(""); }} className="icon-button"><RotateCcw size={17} /></Button>
           <Dialog.Close asChild><Button aria-label="ปิด AI Analyst" className="icon-button"><X size={20} /></Button></Dialog.Close>
         </div>
@@ -54,7 +54,7 @@ export function ChatPanel({ filters, qwenReady, open, setOpen }: {
         <div ref={list} className="min-h-0 flex-1 overflow-y-auto px-5 py-5" aria-live="polite">
           {!messages.length && <div className="space-y-3"><div className="rounded-xl bg-[#eef5ff] p-4"><Bot size={20} className="mb-2 text-blue-600" /><p className="font-bold">ถามเกี่ยวกับข้อมูลที่เห็น</p><p className="mt-1 text-sm text-muted">ถามถึงตัวเลข สาเหตุที่บันทึกไว้ หรือสิ่งที่ควรตรวจต่อ คำตอบจะอิงตัวกรอง ณ ตอนส่ง</p></div>{prompts.map(prompt => <Button key={prompt} onClick={() => send(prompt)} className="w-full justify-start border border-line text-left hover:bg-slate-50">{prompt}</Button>)}</div>}
           {messages.map((message, i) => <div key={i} className={`mb-4 ${message.role === "user" ? "ml-8" : "mr-3"}`}>
-            <p className="mb-1 text-xs text-muted">{message.role === "user" ? "คุณ" : message.mode === "qwen" ? "Qwen" : "คำตอบสาธิต"} · {message.scope}</p>
+            <p className="mb-1 text-xs text-muted">{message.role === "user" ? "คุณ" : "คำตอบสาธิต"} · {message.scope}</p>
             <div className={`rounded-xl px-4 py-3 text-sm ${message.role === "user" ? "bg-[#112b45] text-white" : "markdown border border-line bg-slate-50"}`}>
               {message.role === "user" ? message.content : <ReactMarkdown disallowedElements={["img", "a"]} unwrapDisallowed>{message.content}</ReactMarkdown>}
             </div>
