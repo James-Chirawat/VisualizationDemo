@@ -105,7 +105,7 @@ export function Dashboard() {
             {summary.completed ? <><div className="chart chart-routes" aria-label="กราฟเปรียบเทียบอัตราตรงเวลารายเส้นทาง"><ResponsiveContainer width="100%" height="100%">
               <BarChart layout="vertical" data={byRoute} margin={{ top: 6, right: 12, left: 4, bottom: 0 }} barSize={19}>
                 <CartesianGrid horizontal={false} stroke="#e8eef2" /><XAxis type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tickFormatter={value => `${value}%`} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#52647a" }} />
-                <YAxis type="category" dataKey="id" width={45} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#344b61" }} />
+                <YAxis type="category" dataKey="id" interval={0} width={45} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#344b61" }} />
                 <Tooltip contentStyle={chartTooltip} labelFormatter={label => routes.find(route => route.id === label)?.label ?? label} formatter={(value) => [pct(Number(value)), "อัตราตรงเวลา"]} />
                 <ReferenceLine x={target} stroke="#b26627" strokeDasharray="4 4" />
                 <Bar dataKey="rate" radius={[0, 5, 5, 0]} isAnimationActive={false} onClick={(data) => { if (data.payload?.id) change("route", data.payload.id); }} className="cursor-pointer">{byRoute.map(route => <Cell key={route.id} fill={route.rate !== null && route.rate < target ? "#d77b3d" : "#2c729b"} />)}</Bar>
