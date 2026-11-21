@@ -616,3 +616,46 @@ button.text-link { min-height: 24px; padding-block: 2px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+.nav-short, .filter-more { display: none; }
+.filter-dates { display: contents; }
+.fleet-anchor { scroll-margin-top: 83px; }
+.fleet-expand, .fleet-trip-action { background: var(--navy-700); color: var(--on-dark); border: 1px solid var(--navy-500); }
+.fleet-expand:hover, .fleet-trip-action:hover { background: var(--navy-600); }
+.fleet-header .fleet-expand { margin-top: 8px; }
+.fleet-map-hit, .fleet-dialog .fleet-head { cursor: pointer; }
+.fleet-dialog .fleet-route path:not(.fleet-map-hit), .fleet-dialog .fleet-pin { pointer-events: none; }
+.fleet-dialog { position: fixed; top: 50%; left: 50%; z-index: var(--z-dialog); transform: translate(-50%, -50%); width: min(94vw, 980px); max-height: 90dvh; overflow: auto; border-radius: 18px; padding: 18px; box-shadow: 0 20px 65px #0b243555; }
+.fleet-dialog-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--navy-500); padding-bottom: 12px; }
+.fleet-dialog-header h2 { font-size: 22px; font-weight: 700; }
+.fleet-dialog-header p { color: var(--on-dark-muted); font-size: 14px; }
+.fleet-dialog-body { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(250px, 1fr); align-items: start; gap: 16px; margin-top: 12px; }
+.fleet-dialog .fleet-map { margin-top: 0; }
+.fleet-dialog .fleet-map svg[role=img] { height: min(62dvh, 550px); min-height: 270px; }
+.fleet-dialog .fleet-list button { min-height: 48px; padding: 5px; }
+.fleet-dialog .fleet-route-title small { white-space: normal; }
+.fleet-trip-info { display: grid; gap: 5px; margin-top: 10px; padding: 11px; border-radius: 10px; background: var(--navy-800); border: 1px solid var(--navy-500); font-size: 14px; }
+.fleet-trip-info > div { display: flex; align-items: center; gap: 7px; margin-bottom: 3px; }
+.fleet-trip-info strong { color: var(--on-dark-success); }
+.fleet-trip-action { justify-self: start; margin-top: 4px; }
+@media (max-width: 590px) {
+  .topbar-nav { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px; margin-inline: 0; padding-inline: 0; }
+  .topbar-nav a { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 3px; min-height: 43px; padding: 3px 0; font-size: 11px; }
+  .nav-full { display: none; }
+  .nav-short { display: inline; }
+  .page-header { margin-bottom: 10px; }
+  .hero-connection { display: none; }
+  .filter-more { display: flex; grid-column: 1 / -1; flex-wrap: wrap; align-items: center; gap: 5px 8px; }
+  .filter-more button { padding: 5px 8px; font-size: 12px; }
+  .filter-more small { color: var(--muted); font-size: 12px; }
+  .filter-dates[data-open=false] { display: none; }
+  .filters { padding-block: 8px; margin-bottom: 10px; }
+  .kpi { padding-block: 9px; }
+  .attention { margin-top: 10px; }
+  .fleet-anchor, .main, .section-block { scroll-margin-top: 107px; }
+  .fleet-dialog { padding: 12px; }
+  .fleet-dialog-body { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .fleet-dialog .fleet-map svg[role=img] { height: min(44dvh, 388px); min-height: 210px; }
+  .fleet-dialog .fleet-route-picker { display: grid; }
+  .fleet-dialog .fleet-trip-info { grid-row: 1; margin-top: 0; }
+}

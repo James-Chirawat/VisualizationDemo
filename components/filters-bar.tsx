@@ -18,6 +18,7 @@ function dateProblem(key: "from" | "to", value: string, filters: Filters) {
 export function FiltersBar() {
   const { state: { filters }, actions } = useDashboard();
   const [dateError, setDateError] = useState("");
+  const [datesOpen, setDatesOpen] = useState(false);
 
   function changeDate(key: "from" | "to", value: string) {
     const problem = dateProblem(key, value, filters);
@@ -41,8 +42,16 @@ export function FiltersBar() {
         {Object.entries(statusLabels).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
       </select><ChevronDown size={16} aria-hidden />
     </span></label>
+    <div className="filter-more">
+      <Button type="button" className="secondary" aria-expanded={datesOpen} aria-controls="date-filter-fields" onClick={() => setDatesOpen(open => !open)}>
+        {datesOpen ? "ซ่อนตัวกรองเพิ่มเติม" : "ตัวกรองเพิ่มเติม"} <ChevronDown size={15} aria-hidden />
+      </Button>
+      <small>{formatRange(filters.from, filters.to)}</small>
+    </div>
+    <div className="filter-dates" id="date-filter-fields" data-open={datesOpen}>
     <label className="field"><span>วันที่สั่งเริ่มต้น</span><input type="date" min={dateBounds.from} max={filters.to} value={filters.from} {...dateProps} onChange={event => changeDate("from", event.target.value)} /></label>
     <label className="field"><span>วันที่สั่งสิ้นสุด</span><input type="date" min={filters.from} max={dateBounds.to} value={filters.to} {...dateProps} onChange={event => changeDate("to", event.target.value)} /></label>
+    </div>
     <Button className="secondary reset" onClick={() => { actions.resetAll(); setDateError(""); }}><RotateCcw size={16} aria-hidden /> รีเซ็ต</Button>
     {dateError ? <p id="date-error" role="alert" className="filter-error">{dateError} · ยังใช้ช่วง {formatRange(filters.from, filters.to)}</p> : null}
   </Card>;

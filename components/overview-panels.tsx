@@ -52,7 +52,7 @@ function OnTimeKpiCard({ rate, onTime, completed }: { rate: number | null; onTim
 }
 
 export function KpiSection() {
-  const { state: { filters, insight: { summary } }, actions } = useDashboard();
+  const { state: { filters, performance: { summary } }, actions } = useDashboard();
   const others: Kpi[] = [
     { name: "เที่ยวขนส่งทั้งหมด", value: num(summary.total), icon: Truck, detail: `ส่งถึง ${summary.completed} · กำลังขนส่ง ${summary.pending}` },
     { name: "ค่าใช้จ่ายรวม", value: num(summary.cost), unit: "บาท", icon: Wallet, detail: `เฉลี่ย ${num(summary.costPerTrip)} บาท/เที่ยว` },
@@ -64,7 +64,7 @@ export function KpiSection() {
       <OnTimeKpiCard rate={summary.rate} onTime={summary.onTime} completed={summary.completed} />
       {others.map(kpi => <KpiCard key={kpi.name} kpi={kpi} />)}
     </div>
-    {filters.status !== "all" ? <p className="scope-note">กำลังดูเฉพาะสถานะ «{statusLabels[filters.status]}» อัตราตรงเวลาใช้เฉพาะเที่ยวที่เหลือในตัวกรองนี้</p> : null}
+    {filters.status !== "all" ? <p className="scope-note">KPI และกราฟตรงเวลาใช้ทุกสถานะในเส้นทางและช่วงวันที่ที่เลือก · มุมมองรายการใช้สถานะ «{statusLabels[filters.status]}»</p> : null}
   </>;
 }
 
@@ -77,9 +77,9 @@ function topReason(rows: Insight["rows"], routeId: string) {
 }
 
 export function AttentionStrip() {
-  const { state: { filters, insight: { byRoute, rows, summary } }, actions } = useDashboard();
+  const { state: { filters, performance: { byRoute, rows, summary } }, actions } = useDashboard();
   // Rates per route only compare fairly across all statuses.
-  if (filters.status !== "all" || !summary.completed) return null;
+  if (!summary.completed) return null;
   const measured = byRoute.filter(route => route.rate !== null);
   const below = measured.filter(route => isBelowTarget(route.rate)).toSorted((a, b) => a.rate! - b.rate!);
 
@@ -95,7 +95,7 @@ export function AttentionStrip() {
   return <section className="attention" aria-label="เรื่องที่ควรดูก่อน">
     <span className="attention-icon"><TriangleAlert size={20} aria-hidden /></span>
     <div>
-      <p className="attention-title"><span className="code">{worst.id}</span> {worst.label} ส่งตรงเวลา {pct(worst.rate)} · ต่ำกว่าเป้า {num(target - worst.rate!, 1)} จุด</p>
+      <p className="attention-title"><span className="code">{worst.id}</span> {worst.label} ส่งตรงเวลา {pct(worst.rate)} · ต่ำกว่าเป้า {num(target - worst.rate!, 1)} จุดเปอร์เซ็นต์</p>
       <p>ล่าช้า {worst.late} จาก {worst.completed} เที่ยว{reason ? ` · สาเหตุที่บันทึกบ่อยสุด: ${reason[0]} (${reason[1]} เที่ยว)` : ""}{below.length > 1 ? ` · ต่ำกว่าเป้าอีก ${below.length - 1} เส้นทาง` : ""}</p>
     </div>
     <div className="attention-actions">
@@ -140,7 +140,7 @@ const TrendChart = memo(function TrendChart({ months }: { months: Insight["month
 });
 
 export function TrendPanel() {
-  const { state: { insight } } = useDashboard();
+  const { state: { performance: insight } } = useDashboard();
   return <div className="executive-trend">
     <Card className="panel">
       <PanelHeading title="แนวโน้มรายเดือน" subtitle="คิดตามเดือนที่สั่งและเที่ยวที่ส่งถึงแล้ว" aside={<span className="legend"><i /> เป้าหมาย {target}%</span>} />
@@ -177,7 +177,7 @@ const RouteList = memo(function RouteList({ byRoute, selectedRoute, onSelect }: 
 });
 
 export function RoutePerformancePanel() {
-  const { state: { filters, insight }, actions } = useDashboard();
+  const { state: { filters, performance: insight }, actions } = useDashboard();
   return <Card className="panel route-performance">
     <PanelHeading title="อัตราตรงเวลารายเส้นทาง" subtitle="กดแถวเพื่อกรองเส้นทาง · เส้นประคือเป้า" aside={<span className="legend"><i /> {target}%</span>} />
     {insight.summary.completed ? <RouteList byRoute={insight.byRoute} selectedRoute={filters.route} onSelect={actions.focusRoute} /> : <EmptyState>ไม่มีเที่ยวที่ส่งถึงในตัวกรองนี้</EmptyState>}
@@ -187,15 +187,15 @@ export function RoutePerformancePanel() {
 /* ---------- Right rail and driver leaders ---------- */
 
 export function DriverLeadersPanel() {
-  const { state: { insight }, actions } = useDashboard();
+  const { state: { performance: insight }, actions } = useDashboard();
   return <DriverLeaders drivers={insight.leaders} onViewDriver={actions.showDriverTrips} />;
 }
 
 export function OperationsRail() {
-  const { state: { insight: { rows, summary, byRoute } }, actions } = useDashboard();
+  const { state: { filters, insight: { rows, summary }, performance: { byRoute } }, actions } = useDashboard();
   const measured = byRoute.filter(route => route.rate !== null);
   return <aside className="executive-rail" aria-label="ภาพรวมปฏิบัติการ">
     <FleetMonitor rows={rows} onViewTrip={actions.openShipment} />
-    <OperationsMix summary={summary} belowTarget={measured.filter(route => isBelowTarget(route.rate)).length} measuredRoutes={measured.length} />
+    <OperationsMix statusScope={filters.status === "all" ? "ทุกสถานะ" : statusLabels[filters.status]} summary={summary} belowTarget={measured.filter(route => isBelowTarget(route.rate)).length} measuredRoutes={measured.length} />
   </aside>;
 }

@@ -56,7 +56,7 @@ const kpiDefinitions = <ul className="method-list">
 </ul>;
 
 function KpiMethodDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  return <DialogFrame open={open} onClose={onClose} icon={<CircleHelp size={24} aria-hidden />} title="นิยามและฐานคำนวณ" description="ทุก KPI ใช้ข้อมูลจำลองตามตัวกรองในหน้า Dashboard">
+  return <DialogFrame open={open} onClose={onClose} icon={<CircleHelp size={24} aria-hidden />} title="นิยามและฐานคำนวณ" description="KPI หลักคำนวณจากทุกสถานะในเส้นทางและช่วงวันที่ที่เลือก">
     {kpiDefinitions}
   </DialogFrame>;
 }

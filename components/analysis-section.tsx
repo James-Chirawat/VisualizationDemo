@@ -9,7 +9,7 @@ import { useDashboard } from "@/components/dashboard-context";
 import { num, pct } from "@/lib/analytics";
 
 function FindingPanel() {
-  const { state: { insight: { summary, worst, comparison, byReason } }, actions, meta: { activeRoute } } = useDashboard();
+  const { state: { performance: { summary, worst, comparison, byReason } }, actions, meta: { activeRoute } } = useDashboard();
   const routeGap = summary.rate !== null && comparison?.rate != null ? summary.rate - comparison.rate : null;
   const headline = activeRoute ? `${activeRoute.id} อยู่ที่ ${pct(summary.rate)}` : worst ? `${worst.id} ต่ำสุดที่ ${pct(worst.rate)}` : "ยังไม่มีอัตราตรงเวลา";
   const basis = activeRoute && summary.completed ? `ตรงเวลา ${summary.onTime} จาก ${summary.completed} เที่ยวที่ส่งถึง`
@@ -22,7 +22,7 @@ function FindingPanel() {
       <div>
         <b>{headline}</b>
         <p>{basis}</p>
-        {routeGap !== null ? <p>ต่างจากเส้นทางอื่น {routeGap > 0 ? "+" : ""}{num(routeGap, 1)} จุดเปอร์เซ็นต์ ในช่วงและสถานะเดียวกัน</p> : null}
+        {routeGap !== null ? <p>ต่างจากเส้นทางอื่น {routeGap > 0 ? "+" : ""}{num(routeGap, 1)} จุดเปอร์เซ็นต์ ในช่วงเดียวกัน · ทุกสถานะ</p> : null}
         {!activeRoute && worst ? <Button className="secondary mt-3" onClick={() => actions.focusRoute(worst.id)}>เจาะ {worst.id} <ArrowUpRight size={16} aria-hidden /></Button> : null}
       </div>
     </div> : <EmptyState>ไม่มีเที่ยวขนส่งในตัวกรองนี้</EmptyState>}
@@ -42,9 +42,9 @@ function LateReasonsPanel() {
 }
 
 function LateDriversPanel() {
-  const { state: { insight: { drivers } } } = useDashboard();
+  const { state: { performance: { drivers } } } = useDashboard();
   return <Card className="panel">
-    <PanelHeading level={3} title="คนขับที่ล่าช้าบ่อย" subtitle="สูงสุด 5 คน เรียงตามจำนวนเที่ยวล่าช้า" />
+    <PanelHeading level={3} title="คนขับที่ล่าช้าบ่อย" subtitle="สูงสุด 5 คนจากทุกสถานะ · เรียงตามจำนวนเที่ยวล่าช้า" />
     {drivers.length ? <div className="table-scroll"><table className="data-table compact">
       <thead><tr><th scope="col">รหัสคนขับ</th><th scope="col">ส่งถึง</th><th scope="col">ล่าช้า</th><th scope="col">ตรงเวลา</th></tr></thead>
       <tbody>{drivers.map(driver => <tr key={driver.id}>

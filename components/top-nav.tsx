@@ -1,25 +1,26 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { BellRing, ChartNoAxesCombined, ClipboardList, MapPinned } from "lucide-react";
+import { BellRing, ChartNoAxesCombined, ClipboardList, MapPinned, Truck } from "lucide-react";
 import { RouteLensMark } from "@/components/ui/routelens-mark";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { scrollToSection, type SectionId } from "@/components/dashboard-context";
 import { prefersReducedMotion } from "@/lib/use-media-query";
 
 const items = [
-  { label: "ภาพรวม", id: "overview", icon: ChartNoAxesCombined },
-  { label: "เจาะลึกข้อมูล", id: "analysis", icon: MapPinned },
-  { label: "รายการขนส่ง", id: "shipments", icon: ClipboardList },
-  { label: "LINE OA", id: "alerts", icon: BellRing },
-] as const satisfies readonly { label: string; id: SectionId; icon: unknown }[];
-const sectionIds = ["analysis", "shipments", "alerts"] as const;
+  { label: "ภาพรวม", short: "ภาพรวม", id: "overview", icon: ChartNoAxesCombined },
+  { label: "ติดตามรถ", short: "ติดตามรถ", id: "fleet", icon: Truck },
+  { label: "เจาะลึกข้อมูล", short: "เจาะลึก", id: "analysis", icon: MapPinned },
+  { label: "รายการขนส่ง", short: "รายการ", id: "shipments", icon: ClipboardList },
+  { label: "LINE OA", short: "LINE OA", id: "alerts", icon: BellRing },
+] as const satisfies readonly { label: string; short: string; id: SectionId; icon: unknown }[];
+const sectionIds = ["fleet", "analysis", "shipments", "alerts"] as const;
 
 /** Which section sits under the sticky top bar. Owned here so scrolling re-renders only the nav. */
 function useActiveSection() {
   const [active, setActive] = useState<SectionId>("overview");
   useEffect(() => {
-    // Three rect reads per scroll event; React skips the render when the section is unchanged.
+    // A few rect reads per scroll event; React skips the render when the section is unchanged.
     const update = () => {
       const offset = (document.querySelector(".topbar")?.getBoundingClientRect().height ?? 0) + 32;
       const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
@@ -58,8 +59,8 @@ export function TopNav() {
       </a>
       <div className="topbar-actions">
         <nav ref={nav} className="topbar-nav" aria-label="เมนูแดชบอร์ด">
-          {items.map(item => <a key={item.id} href={`#${item.id}`} aria-current={active === item.id ? "location" : undefined} onClick={event => { event.preventDefault(); go(item.id); }}>
-            <item.icon size={16} aria-hidden />{item.label}
+          {items.map(item => <a key={item.id} href={`#${item.id}`} aria-label={item.label} aria-current={active === item.id ? "location" : undefined} onClick={event => { event.preventDefault(); go(item.id); }}>
+            <item.icon size={16} aria-hidden /><span className="nav-full">{item.label}</span><span className="nav-short" aria-hidden>{item.short}</span>
           </a>)}
         </nav>
         <ThemeToggle />

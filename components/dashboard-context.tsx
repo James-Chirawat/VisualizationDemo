@@ -4,7 +4,7 @@ import { createContext, use, useMemo, useState, type ReactNode } from "react";
 import { analyze, defaultFilters, routeById, type Filters, type Route, type Shipment } from "@/lib/analytics";
 import { prefersReducedMotion } from "@/lib/use-media-query";
 
-export type SectionId = "overview" | "analysis" | "shipments" | "alerts";
+export type SectionId = "overview" | "fleet" | "analysis" | "shipments" | "alerts";
 export type ShipmentSort = "latest" | "delay" | "cost";
 export type DashboardDialog = { kind: "shipment"; shipment: Shipment } | { kind: "method" } | null;
 
@@ -16,7 +16,7 @@ export function scrollToSection(id: SectionId) {
 /* ---------- Dashboard data: filters, derived insight, open dialog ---------- */
 
 interface DashboardContextValue {
-  state: { filters: Filters; insight: ReturnType<typeof analyze>; dialog: DashboardDialog };
+  state: { filters: Filters; insight: ReturnType<typeof analyze>; performance: ReturnType<typeof analyze>; dialog: DashboardDialog };
   actions: DashboardActions;
   meta: { activeRoute: Route | undefined; scope: string };
 }
@@ -51,7 +51,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<ShipmentSort>("latest");
   const [page, setPage] = useState(0);
-  const insight = useMemo(() => analyze(filters), [filters]);
+  const { route, from, to } = filters;
+  const performance = useMemo(() => analyze({ route, from, to, status: "all" }), [route, from, to]);
+  const insight = useMemo(() => filters.status === "all" ? performance : analyze(filters), [filters, performance]);
 
   // Only setState functions are captured, so actions keep one identity for the provider's lifetime.
   const actions = useMemo<DashboardActions>(() => {
@@ -68,6 +70,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         scrollToSection("analysis");
       },
       showDriverTrips: driver => {
+        setFilters(current => current.status === "all" ? current : { ...current, status: "all" });
         setSearch(driver);
         setPage(0);
         scrollToSection("shipments");
@@ -87,11 +90,11 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const dashboard = useMemo<DashboardContextValue>(() => {
     const activeRoute = routeById.get(filters.route);
     return {
-      state: { filters, insight, dialog },
+      state: { filters, insight, performance, dialog },
       actions,
       meta: { activeRoute, scope: activeRoute ? `${activeRoute.id} · ${activeRoute.label}` : "ทุกเส้นทาง" },
     };
-  }, [filters, insight, dialog, actions]);
+  }, [filters, insight, performance, dialog, actions]);
 
   const query = useMemo<ShipmentQueryContextValue>(() => ({
     state: { search, sort, page },

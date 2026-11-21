@@ -37,7 +37,7 @@ function matches(row: Shipment, term: string) {
 }
 
 export function ShipmentsTable() {
-  const { state: { insight: { rows, summary } }, actions: { openShipment } } = useDashboard();
+  const { state: { filters, insight: { rows, summary } }, actions: { openShipment } } = useDashboard();
   const { state: { search, sort, page: requestedPage }, actions } = useShipmentQuery();
   // The input updates immediately; the filtered list catches up without blocking typing.
   const deferredSearch = useDeferredValue(search);
@@ -51,8 +51,8 @@ export function ShipmentsTable() {
   const page = Math.min(requestedPage, pageCount - 1);
 
   return <Card as="section" id="shipments" className="panel section-block" aria-labelledby="shipments-title">
-    <PanelHeading id="shipments-title" title="รายการขนส่ง" subtitle={`พบ ${visibleRows.length} จาก ${summary.total} เที่ยวในตัวกรอง · กดรหัสรายการเพื่อเปิดรายละเอียด`}
-      aside={<Button className="secondary" onClick={() => downloadCsv(rows)} disabled={!summary.total}><Download size={16} aria-hidden /> ส่งออก CSV</Button>} />
+    <PanelHeading id="shipments-title" title="รายการขนส่ง" subtitle={`พบ ${visibleRows.length} จาก ${summary.total} เที่ยวในตัวกรอง · ${filters.status === "all" ? "ทุกสถานะ" : statusLabels[filters.status]} · กดรหัสรายการเพื่อเปิดรายละเอียด`}
+      aside={<Button className="secondary" onClick={() => downloadCsv(visibleRows)} disabled={!visibleRows.length || search !== deferredSearch}><Download size={16} aria-hidden /> ส่งออก {num(visibleRows.length)} รายการ</Button>} />
     <div className="shipment-controls">
       <label className="field shipment-search"><span>ค้นหา</span><input className="table-input" type="search" placeholder="รหัสเที่ยว เส้นทาง หรือคนขับ" value={search} onChange={event => actions.setSearch(event.target.value)} /></label>
       <label className="field"><span>เรียงตาม</span><span className="select">

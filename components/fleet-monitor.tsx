@@ -1,7 +1,8 @@
 "use client";
 
 import { memo, useEffect, useMemo, useRef, useState } from "react";
-import { Navigation, Pause, Play, Truck } from "lucide-react";
+import { Maximize2, Navigation, Pause, Play, Truck, X } from "lucide-react";
+import { Dialog } from "radix-ui";
 import { DriverAvatar } from "@/components/driver-avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -89,12 +90,18 @@ export const FleetMonitor = memo(function FleetMonitor({ rows, onViewTrip }: { r
   const [paused, setPaused] = useState(false);
   const prefersStill = useMediaQuery(reducedMotionQuery);
   const [focusedRoute, setFocusedRoute] = useState<RouteId | null>(null);
-  const highlighted = focusedRoute && activeRouteIds.has(focusedRoute) ? focusedRoute : null;
+  const [expanded, setExpanded] = useState(false);
+  const [selectedRoute, setSelectedRoute] = useState<RouteId | null>(null);
+  const panel = useRef<HTMLDivElement>(null);
+  const [panelHeight, setPanelHeight] = useState(0);
+  const pendingDetail = useRef<Shipment | null>(null);
+  const activeFocus = expanded ? selectedRoute : focusedRoute;
+  const highlighted = activeFocus && activeRouteIds.has(activeFocus) ? activeFocus : null;
   // Routes whose vehicle is parked at its destination. Changes only on arrival/departure, so a render then is cheap.
   const [arrivedRoutes, setArrivedRoutes] = useState<ReadonlySet<RouteId>>(new Set());
   const isPlaying = !paused && !prefersStill;
 
-  const mapBox = useRef<HTMLDivElement>(null);
+  const [mapBox, setMapBox] = useState<HTMLDivElement | null>(null);
   const nodes = useRef(new Map<string, Nodes>());
   const node = (id: string) => { let entry = nodes.current.get(id); if (!entry) nodes.current.set(id, entry = {}); return entry; };
   // Demo clock: survives pausing and re-renders, restarts the draw-in when the set of vehicles changes.
@@ -103,7 +110,12 @@ export const FleetMonitor = memo(function FleetMonitor({ rows, onViewTrip }: { r
   playing.current = isPlaying;
 
   useEffect(() => {
-    clock.current = { elapsed: 0, last: performance.now() };
+    clock.current.elapsed = 0;
+  }, [trucks]);
+
+  useEffect(() => {
+    if (!mapBox) return;
+    clock.current.last = performance.now();
     const lengths = new Map(trucks.map(item => [item.trip.id, node(item.trip.id).base?.getTotalLength() ?? 0]));
     let frame = 0;
     let visible = true;
@@ -149,21 +161,25 @@ export const FleetMonitor = memo(function FleetMonitor({ rows, onViewTrip }: { r
       if (visible && !wasVisible) { clock.current.last = performance.now(); frame = requestAnimationFrame(paint); }
       if (!visible) cancelAnimationFrame(frame);
     });
-    if (mapBox.current) observer.observe(mapBox.current);
+    observer.observe(mapBox);
     frame = requestAnimationFrame(paint);
     return () => { cancelAnimationFrame(frame); observer.disconnect(); };
-  }, [trucks]);
+  }, [trucks, mapBox]);
 
   const focus = trucks.find(item => item.route.id === highlighted);
 
-  return <Card className="fleet-panel">
-    <div className="fleet-header">
-      <div className="fleet-tag"><Navigation size={16} aria-hidden /> Fleet Monitor</div>
-      <span className="fleet-sim">GPS จำลอง</span>
-      <h2>ติดตามรถบนเส้นทาง</h2>
-      <p><b>{trucks.length} คัน</b> บน <b>{shownRoutes.length} เส้นทาง</b> ในตัวกรองนี้</p>
-    </div>
-    <div ref={mapBox} className="fleet-map" data-playing={isPlaying}>
+  function changeExpanded(next: boolean) {
+    if (next) {
+      setPanelHeight(panel.current?.offsetHeight ?? 0);
+      setSelectedRoute(highlighted ?? trucks[0]?.route.id ?? null);
+    } else {
+      setFocusedRoute(null);
+    }
+    setExpanded(next);
+  }
+
+  const content = <>
+    <div ref={setMapBox} className="fleet-map" data-playing={isPlaying}>
       {trucks.length ? <>
         <svg viewBox="0 0 238 302" role="img" aria-label="แผนผังเส้นทางขนส่งจำลอง รถแต่ละคันวิ่งจากต้นทางไปยังปลายทางตามสีของเส้นทาง ส่วนที่วิ่งแล้วเป็นเส้นทึบ">
           <defs>
@@ -184,6 +200,7 @@ export const FleetMonitor = memo(function FleetMonitor({ rows, onViewTrip }: { r
             const dim = highlighted && highlighted !== route.id;
             const width = highlighted === route.id ? 3.8 : 2.6;
             return <g key={trip.id} className="fleet-route" opacity={dim ? .3 : 1}>
+              {expanded && <path className="fleet-map-hit" d={corridor.path} fill="none" stroke="transparent" strokeWidth="13" onClick={() => setSelectedRoute(route.id)} />}
               <path d={corridor.path} fill="none" stroke="#0b2232" strokeWidth={width + 4.5} strokeLinecap="round" />
               {/* Whole route, faint; draws itself in on load. */}
               <path ref={el => { node(trip.id).base = el; }} d={corridor.path} pathLength={1} className="fleet-route-base" fill="none" stroke={corridor.color} strokeWidth={width} strokeLinecap="round" />
@@ -197,7 +214,7 @@ export const FleetMonitor = memo(function FleetMonitor({ rows, onViewTrip }: { r
             <text x={city.x + city.dx} y={city.y + city.dy} className="fleet-city">{city.name}</text>
           </g>)}
 
-          {trucks.map(({ trip, route, corridor }) => <g key={trip.id} ref={el => { node(trip.id).head = el; }} className="fleet-head" opacity="0"
+          {trucks.map(({ trip, route, corridor }) => <g key={trip.id} ref={el => { node(trip.id).head = el; }} className="fleet-head" opacity="0" onClick={expanded ? () => setSelectedRoute(route.id) : undefined}
             data-dim={highlighted && highlighted !== route.id ? true : undefined} data-vehicle={trip.id} data-vehicle-route={route.id}>
             <circle className="fleet-head-pulse" r="7" fill={corridor.color} />
             <circle r="4.4" fill="#f4fbff" />
@@ -209,23 +226,24 @@ export const FleetMonitor = memo(function FleetMonitor({ rows, onViewTrip }: { r
           {/* One card at a time: the route being pointed at. */}
           {focus ? <g key={focus.route.id} className="fleet-focus">
             <DestinationPin at={focus.corridor.end} />
-            <foreignObject x={Math.min(238 - 114, Math.max(4, focus.corridor.end[0] - 57))} y={focus.corridor.end[1] - 52 < 4 ? focus.corridor.end[1] + 6 : focus.corridor.end[1] - 52} width="114" height="34">
+            {!expanded && <foreignObject x={Math.min(238 - 114, Math.max(4, focus.corridor.end[0] - 57))} y={focus.corridor.end[1] - 52 < 4 ? focus.corridor.end[1] + 6 : focus.corridor.end[1] - 52} width="114" height="34">
               <div className="fleet-card">
                 <b>{focus.destination}</b>
                 <span><i style={{ background: focus.corridor.color }} /><em ref={el => { node(focus.trip.id).cardEta = el; }}>{remainingText(focus.route.km, focus.corridor.start, false)}</em></span>
               </div>
-            </foreignObject>
+            </foreignObject>}
           </g> : null}
         </svg>
         <Button type="button" className="fleet-control" disabled={prefersStill} onClick={() => setPaused(value => !value)} aria-label={isPlaying ? "หยุดรถจำลอง" : "เล่นรถจำลอง"} title={prefersStill ? "เครื่องตั้งค่าให้ลดการเคลื่อนไหว" : undefined}>{isPlaying ? <Pause size={16} aria-hidden /> : <Play size={16} aria-hidden />}</Button>
       </> : <div className="fleet-empty"><Truck size={24} aria-hidden /><p>ไม่มีรถกำลังขนส่งในตัวกรองนี้</p></div>}
     </div>
-    {trucks.length > 0 ? <p className="fleet-caption">เส้นทึบคือช่วงที่วิ่งแล้ว · ชี้ที่รายการเพื่อดูปลายทาง</p> : null}
+    <div className="fleet-route-picker">
+    {trucks.length > 0 ? <p className="fleet-caption">{expanded ? "แตะเส้นทางหรือเลือกรถ · เส้นทึบคือช่วงที่วิ่งแล้ว" : "เส้นทึบคือช่วงที่วิ่งแล้ว · ชี้ที่รายการเพื่อดูปลายทาง"}</p> : null}
     <div className="fleet-list" aria-label="รถกำลังขนส่ง">
       {trucks.map(({ trip, route, corridor }) => <button key={trip.id} ref={el => { node(trip.id).row = el; }} type="button" className={highlighted === route.id ? "fleet-route-highlighted" : undefined}
-        onMouseEnter={() => setFocusedRoute(route.id)} onMouseLeave={() => setFocusedRoute(null)}
-        onFocus={() => setFocusedRoute(route.id)} onBlur={() => setFocusedRoute(null)}
-        onClick={() => onViewTrip(trip)} aria-label={`เปิดเที่ยว ${route.id} ${route.label} คนขับ ${trip.driver}`}>
+        onMouseEnter={() => { if (!expanded) setFocusedRoute(route.id); }} onMouseLeave={() => { if (!expanded) setFocusedRoute(null); }}
+        onFocus={() => { if (!expanded) setFocusedRoute(route.id); }} onBlur={() => { if (!expanded) setFocusedRoute(null); }}
+        onClick={() => expanded ? setSelectedRoute(route.id) : onViewTrip(trip)} aria-pressed={expanded ? highlighted === route.id : undefined} aria-label={`${expanded ? "เลือก" : "เปิดเที่ยว"} ${route.id} ${route.label} คนขับ ${trip.driver}`}>
         <span style={{ backgroundColor: corridor.color }} />
         <span className="fleet-route-label">
           <span className="fleet-route-title"><b>{trip.route}</b><small>{route.label}</small></span>
@@ -237,5 +255,43 @@ export const FleetMonitor = memo(function FleetMonitor({ rows, onViewTrip }: { r
         <span className="fleet-driver"><DriverAvatar driverId={trip.driver} /><small>{trip.driver}</small></span>
       </button>)}
     </div>
-  </Card>;
+    {expanded && focus && <section className="fleet-trip-info" aria-label="รายละเอียดเส้นทางที่เลือก">
+      <div><DriverAvatar driverId={focus.trip.driver} /><b>{focus.route.id} · {focus.trip.driver}</b></div>
+      <p><b>ต้นทาง</b> {focus.route.label.split(" – ")[0]} <span aria-hidden>→</span> <b>ปลายทาง</b> {focus.destination}</p>
+      <p>ถึงโดยประมาณ <strong ref={el => { node(focus.trip.id).cardEta = el; }}>{remainingText(focus.route.km, focus.corridor.start, false)}</strong></p>
+      <Button className="fleet-trip-action" onClick={() => { pendingDetail.current = focus.trip; changeExpanded(false); }}>เปิดรายละเอียดเที่ยว</Button>
+    </section>}
+    </div>
+  </>;
+
+  return <Dialog.Root open={expanded} onOpenChange={changeExpanded}>
+    <div ref={panel} id="fleet" className="fleet-anchor" style={expanded ? { minHeight: panelHeight } : undefined}>
+      <Card className="fleet-panel">
+        <div className="fleet-header">
+          <div className="fleet-tag"><Navigation size={16} aria-hidden /> Fleet Monitor</div>
+          <span className="fleet-sim">GPS จำลอง</span>
+          <h2>ติดตามรถบนเส้นทาง</h2>
+          <p><b>{trucks.length} คัน</b> บน <b>{shownRoutes.length} เส้นทาง</b> ในตัวกรองนี้</p>
+          <Dialog.Trigger asChild><Button type="button" className="fleet-expand" disabled={!trucks.length}><Maximize2 size={15} aria-hidden /> ขยายแผนผัง</Button></Dialog.Trigger>
+        </div>
+        {!expanded && content}
+      </Card>
+    </div>
+    <Dialog.Portal>
+      <Dialog.Overlay className="dialog-overlay" />
+      <Dialog.Content className="fleet-dialog fleet-panel" onCloseAutoFocus={event => {
+        if (!pendingDetail.current) return;
+        event.preventDefault();
+        const shipment = pendingDetail.current;
+        pendingDetail.current = null;
+        onViewTrip(shipment);
+      }}>
+        <div className="fleet-dialog-header">
+          <div><Dialog.Title>แผนผังติดตามรถ</Dialog.Title><Dialog.Description>GPS จำลอง · {trucks.length} คัน · {shownRoutes.length} เส้นทาง</Dialog.Description></div>
+          <Dialog.Close asChild><Button className="fleet-expand" aria-label="ปิดแผนผัง"><X size={20} aria-hidden /></Button></Dialog.Close>
+        </div>
+        <div className="fleet-dialog-body">{expanded && content}</div>
+      </Dialog.Content>
+    </Dialog.Portal>
+  </Dialog.Root>;
 });
